@@ -1,11 +1,14 @@
 //  Portions Copyright 2019
-// Xuesong Zhou
+// Xuesong Zhou, Jun Zhao
 //   If you help write or modify the code, please also list your names here.
 //   The reason of having Copyright info here is to ensure all the modified version, as a whole, under the GPL 
 //   and further prevent a violation of the GPL.
 
 // More about "How to use GNU licenses for your own software"
 // http://www.gnu.org/licenses/gpl-howto.html
+
+// two important classes are Assignment and NetworkForSP
+// two important functions are: CVDF_Period::PerformBPRX and NetworkForSP::optimal_label_correcting
 
 #pragma warning( disable : 4305 4267 4018) 
 #include <iostream>
@@ -38,7 +41,7 @@ template <typename T>
 // some basic parameters setting
 
 //Pls make sure the _MAX_K_PATH > Agentlite.cpp's g_number_of_K_paths+g_reassignment_number_of_K_paths and the _MAX_ZONE remain the same with .cpp's defination
-#define _MAX_LABEL_COST 9999999999999999999999.0
+#define _MAX__COST 9999999999999999999999.0
 
 #define _MAX_AGNETTYPES 4 //because of the od demand store format,the MAX_demandtype must >=g_DEMANDTYPES.size()+1
 #define _MAX_TIMEPERIODS 1
