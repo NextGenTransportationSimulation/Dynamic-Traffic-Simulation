@@ -1,6 +1,0 @@
-link_type,link_type_name,agent_type_list,type_code,traffic_flow_code
-1,Highway/Expressway,,f,1
-2,Major arterial,,a,2
-3,Minor arterial,,m,2
-4,Local,,l,2
-99,Connetor,,c,0
