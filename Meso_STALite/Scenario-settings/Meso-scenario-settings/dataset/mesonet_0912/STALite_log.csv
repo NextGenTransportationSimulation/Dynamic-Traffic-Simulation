@@ -1,0 +1,280 @@
+STALite Log           
+Step 1: Reading input data
+Step 1.1: Reading section [demand_period] in setting.csv...
+number of demand periods = 1
+Step 1.2: Reading section [link_type] in setting.csv...
+number of link types = 7
+Step 1.3: Reading section [agent_type] in setting.csv...
+number of agent typess = 1
+Step 1.4: Reading node data in node.csv...
+number of nodes = 1360
+Step 1.5: Initializing O-D zone vector...
+number of zones = 25
+Step 1.6: Reading link data in link.csv... 
+number of links = 1502
+number of links =1552
+Step 1.7: Reading service arc in service_arc.csv...
+number of service_arcs = 0
+
+allocating 4D memory for 0 zones
+allocating 3D memory for 0
+
+Step 1.8: Reading file section [demand_file_list] in setting.csv...
+o_zone_id:1020, d_zone_id: 2005, value = 2200.000000
+total_demand_volume is 2200.000000
+
+Step 2: Assigning computing tasks to memory blocks...
+There are 4 networks in memory.
+
+Step 3: Column Generation for Traffic Assignment...
+Total Column Generation iteration: 5
+
+Current iteration number:0
+Current CPU time: 0.004000 s
+label correcting for zone 0 in processor 0
+
+Current iteration number:1
+Current CPU time: 0.015000 s
+label correcting for zone 0 in processor 0
+writing link_performance_sig.csv..
+
+Current iteration number:2
+Current CPU time: 0.033000 s
+Signal timing updating for main node id 1:
+Signal timing updating for main node id 2:
+Signal timing updating for main node id 3:
+Signal timing updating for main node id 4:
+Signal timing updating for main node id 5:
+Signal timing updating for main node id 6:
+Signal timing updating for main node id 7:
+Signal timing updating for main node id 8:
+Signal timing updating for main node id 9:
+Signal timing updating for main node id 10:
+Signal timing updating for main node id 11:
+Signal timing updating for main node id 12:
+Signal timing updating for main node id 13:
+Signal timing updating for main node id 14:
+Signal timing updating for main node id 15:
+Signal timing updating for main node id 16:
+Signal timing updating for main node id 17:
+Signal timing updating for main node id 18:
+Signal timing updating for main node id 19:
+Signal timing updating for main node id 20:
+Signal timing updating for main node id 21:
+Signal timing updating for main node id 22:
+Signal timing updating for main node id 23:
+Signal timing updating for main node id 24:
+Signal timing updating for main node id 25:
+Signal timing updating for main node id 26:
+Signal timing updating for main node id 28:
+Signal timing updating for main node id 29:
+Signal timing updating for main node id 30:
+Signal timing updating for main node id 31:
+Signal timing updating for main node id 32:
+Signal timing updating for main node id 33:
+Signal timing updating for main node id 34:
+Signal timing updating for main node id 35:
+Signal timing updating for main node id 36:
+Signal timing updating for main node id 37:
+Signal timing updating for main node id 38:
+Signal timing updating for main node id 39:
+Signal timing updating for main node id 40:
+Signal timing updating for main node id 41:
+Signal timing updating for main node id 42:
+Signal timing updating for main node id 43:
+Signal timing updating for main node id 44:
+Signal timing updating for main node id 45:
+Signal timing updating for main node id 46:
+Signal timing updating for main node id 47:
+Signal timing updating for main node id 48:
+Signal timing updating for main node id 49:
+Signal timing updating for main node id 50:
+Signal timing updating for main node id 51:
+Signal timing updating for main node id 52:
+Signal timing updating for main node id 53:
+Signal timing updating for main node id 54:
+Signal timing updating for main node id 55:
+Signal timing updating for main node id 56:
+Signal timing updating for main node id 57:
+Signal timing updating for main node id 58:
+Signal timing updating for main node id 59:
+Signal timing updating for main node id 60:
+Signal timing updating for main node id 61:
+Signal timing updating for main node id 62:
+Signal timing updating for main node id 63:
+Signal timing updating for main node id 64:
+Signal timing updating for main node id 65:
+Signal timing updating for main node id 66:
+Signal timing updating for main node id 67:
+Signal timing updating for main node id 68:
+Signal timing updating for main node id 69:
+Step 1.7: Reading service arc in service_arc.csv...
+number of service_arcs = 196
+
+label correcting for zone 0 in processor 0
+writing link_performance_sig.csv..
+
+Current iteration number:3
+Current CPU time: 1.206000 s
+Signal timing updating for main node id 1:
+Signal timing updating for main node id 2:
+Signal timing updating for main node id 3:
+Signal timing updating for main node id 4:
+Signal timing updating for main node id 5:
+Signal timing updating for main node id 6:
+Signal timing updating for main node id 7:
+Signal timing updating for main node id 8:
+Signal timing updating for main node id 9:
+Signal timing updating for main node id 10:
+Signal timing updating for main node id 11:
+Signal timing updating for main node id 12:
+Signal timing updating for main node id 13:
+Signal timing updating for main node id 14:
+Signal timing updating for main node id 15:
+Signal timing updating for main node id 16:
+Signal timing updating for main node id 17:
+Signal timing updating for main node id 18:
+Signal timing updating for main node id 19:
+Signal timing updating for main node id 20:
+Signal timing updating for main node id 21:
+Signal timing updating for main node id 22:
+Signal timing updating for main node id 23:
+Signal timing updating for main node id 24:
+Signal timing updating for main node id 25:
+Signal timing updating for main node id 26:
+Signal timing updating for main node id 28:
+Signal timing updating for main node id 29:
+Signal timing updating for main node id 30:
+Signal timing updating for main node id 31:
+Signal timing updating for main node id 32:
+Signal timing updating for main node id 33:
+Signal timing updating for main node id 34:
+Signal timing updating for main node id 35:
+Signal timing updating for main node id 36:
+Signal timing updating for main node id 37:
+Signal timing updating for main node id 38:
+Signal timing updating for main node id 39:
+Signal timing updating for main node id 40:
+Signal timing updating for main node id 41:
+Signal timing updating for main node id 42:
+Signal timing updating for main node id 43:
+Signal timing updating for main node id 44:
+Signal timing updating for main node id 45:
+Signal timing updating for main node id 46:
+Signal timing updating for main node id 47:
+Signal timing updating for main node id 48:
+Signal timing updating for main node id 49:
+Signal timing updating for main node id 50:
+Signal timing updating for main node id 51:
+Signal timing updating for main node id 52:
+Signal timing updating for main node id 53:
+Signal timing updating for main node id 54:
+Signal timing updating for main node id 55:
+Signal timing updating for main node id 56:
+Signal timing updating for main node id 57:
+Signal timing updating for main node id 58:
+Signal timing updating for main node id 59:
+Signal timing updating for main node id 60:
+Signal timing updating for main node id 61:
+Signal timing updating for main node id 62:
+Signal timing updating for main node id 63:
+Signal timing updating for main node id 64:
+Signal timing updating for main node id 65:
+Signal timing updating for main node id 66:
+Signal timing updating for main node id 67:
+Signal timing updating for main node id 68:
+Signal timing updating for main node id 69:
+Step 1.7: Reading service arc in service_arc.csv...
+number of service_arcs = 588
+
+label correcting for zone 0 in processor 0
+writing link_performance_sig.csv..
+
+Current iteration number:4
+Current CPU time: 2.128000 s
+Signal timing updating for main node id 1:
+Signal timing updating for main node id 2:
+Signal timing updating for main node id 3:
+Signal timing updating for main node id 4:
+Signal timing updating for main node id 5:
+Signal timing updating for main node id 6:
+Signal timing updating for main node id 7:
+Signal timing updating for main node id 8:
+Signal timing updating for main node id 9:
+Signal timing updating for main node id 10:
+Signal timing updating for main node id 11:
+Signal timing updating for main node id 12:
+Signal timing updating for main node id 13:
+Signal timing updating for main node id 14:
+Signal timing updating for main node id 15:
+Signal timing updating for main node id 16:
+Signal timing updating for main node id 17:
+Signal timing updating for main node id 18:
+Signal timing updating for main node id 19:
+Signal timing updating for main node id 20:
+Signal timing updating for main node id 21:
+Signal timing updating for main node id 22:
+Signal timing updating for main node id 23:
+Signal timing updating for main node id 24:
+Signal timing updating for main node id 25:
+Signal timing updating for main node id 26:
+Signal timing updating for main node id 28:
+Signal timing updating for main node id 29:
+Signal timing updating for main node id 30:
+Signal timing updating for main node id 31:
+Signal timing updating for main node id 32:
+Signal timing updating for main node id 33:
+Signal timing updating for main node id 34:
+Signal timing updating for main node id 35:
+Signal timing updating for main node id 36:
+Signal timing updating for main node id 37:
+Signal timing updating for main node id 38:
+Signal timing updating for main node id 39:
+Signal timing updating for main node id 40:
+Signal timing updating for main node id 41:
+Signal timing updating for main node id 42:
+Signal timing updating for main node id 43:
+Signal timing updating for main node id 44:
+Signal timing updating for main node id 45:
+Signal timing updating for main node id 46:
+Signal timing updating for main node id 47:
+Signal timing updating for main node id 48:
+Signal timing updating for main node id 49:
+Signal timing updating for main node id 50:
+Signal timing updating for main node id 51:
+Signal timing updating for main node id 52:
+Signal timing updating for main node id 53:
+Signal timing updating for main node id 54:
+Signal timing updating for main node id 55:
+Signal timing updating for main node id 56:
+Signal timing updating for main node id 57:
+Signal timing updating for main node id 58:
+Signal timing updating for main node id 59:
+Signal timing updating for main node id 60:
+Signal timing updating for main node id 61:
+Signal timing updating for main node id 62:
+Signal timing updating for main node id 63:
+Signal timing updating for main node id 64:
+Signal timing updating for main node id 65:
+Signal timing updating for main node id 66:
+Signal timing updating for main node id 67:
+Signal timing updating for main node id 68:
+Signal timing updating for main node id 69:
+Step 1.7: Reading service arc in service_arc.csv...
+number of service_arcs = 1176
+
+label correcting for zone 0 in processor 0
+writing link_performance_sig.csv..
+
+Step 4: Column Pool Updating
+Total Column Pool Updating iteration: 0
+
+Done!
+CPU Running Time for column pool updating: 0.001000 s
+writing link_performance.csv..
+writing agent.csv..
+writing 0  zones 
+Output for assignment with 5 iterations. Traffic assignment completes!
+CPU Running Time for outputting simulation results: 0.009000 s
+free memory..
+done.
