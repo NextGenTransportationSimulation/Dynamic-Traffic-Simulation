@@ -1,0 +1,143 @@
+Step 1:Input data...
+CPU time:0.21904921531677246s
+
+Step 2: Calibrate(1, 1) key coeeficients...
+CPU time:0.6671500205993652s
+
+Step 3: Calibrate VDF function of links for VDF_type: (1, 1) and time period...
+Step 3.1: Calculate the VOCs of links: (1, 1) and time period 0600_0900
+Step 3.2 :VDF calibration: (1, 1) and time period 0600_0900
+CPU time:1.004225492477417s
+
+Step 3.1: Calculate the VOCs of links: (1, 1) and time period 0900_1400
+Step 3.2 :VDF calibration: (1, 1) and time period 0900_1400
+CPU time:1.1952686309814453s
+
+Step 3.1: Calculate the VOCs of links: (1, 1) and time period 1400_1800
+Step 3.2 :VDF calibration: (1, 1) and time period 1400_1800
+CPU time:1.3823106288909912s
+
+Step 3.1: Calculate the VOCs of links: (1, 1) and time period 1800_0600
+Step 3.2 :VDF calibration: (1, 1) and time period 1800_0600
+CPU time:1.5723533630371094s
+
+Step 4: Calibrate daily VDF function for VDF_type:(1, 1)...
+CPU time:0.26606011390686035s
+
+Step 2: Calibrate(1, 2) key coeeficients...
+CPU time:0.6791524887084961s
+
+Step 3: Calibrate VDF function of links for VDF_type: (1, 2) and time period...
+Step 3.1: Calculate the VOCs of links: (1, 2) and time period 0600_0900
+Step 3.2 :VDF calibration: (1, 2) and time period 0600_0900
+CPU time:0.2290515899658203s
+
+Step 3.1: Calculate the VOCs of links: (1, 2) and time period 0900_1400
+Step 3.2 :VDF calibration: (1, 2) and time period 0900_1400
+CPU time:0.46010375022888184s
+
+Step 3.1: Calculate the VOCs of links: (1, 2) and time period 1400_1800
+Step 3.2 :VDF calibration: (1, 2) and time period 1400_1800
+CPU time:0.6871545314788818s
+
+Step 3.1: Calculate the VOCs of links: (1, 2) and time period 1800_0600
+Step 3.2 :VDF calibration: (1, 2) and time period 1800_0600
+CPU time:0.9192066192626953s
+
+Step 4: Calibrate daily VDF function for VDF_type:(1, 2)...
+CPU time:0.3870871067047119s
+
+Step 2: Calibrate(1, 3) key coeeficients...
+CPU time:0.5371208190917969s
+
+Step 3: Calibrate VDF function of links for VDF_type: (1, 3) and time period...
+Step 3.1: Calculate the VOCs of links: (1, 3) and time period 0600_0900
+Step 3.2 :VDF calibration: (1, 3) and time period 0600_0900
+CPU time:0.19004201889038086s
+
+Step 3.1: Calculate the VOCs of links: (1, 3) and time period 0900_1400
+Step 3.2 :VDF calibration: (1, 3) and time period 0900_1400
+CPU time:0.38608670234680176s
+
+Step 3.1: Calculate the VOCs of links: (1, 3) and time period 1400_1800
+Step 3.2 :VDF calibration: (1, 3) and time period 1400_1800
+CPU time:0.5801303386688232s
+
+Step 3.1: Calculate the VOCs of links: (1, 3) and time period 1800_0600
+Step 3.2 :VDF calibration: (1, 3) and time period 1800_0600
+CPU time:0.7691729068756104s
+
+Step 4: Calibrate daily VDF function for VDF_type:(1, 3)...
+CPU time:0.33907580375671387s
+
+Step 2: Calibrate(6, 1) key coeeficients...
+CPU time:1.7944037914276123s
+
+Step 3: Calibrate VDF function of links for VDF_type: (6, 1) and time period...
+Step 3.1: Calculate the VOCs of links: (6, 1) and time period 0600_0900
+Step 3.2 :VDF calibration: (6, 1) and time period 0600_0900
+CPU time:0.4921104907989502s
+
+Step 3.1: Calculate the VOCs of links: (6, 1) and time period 0900_1400
+Step 3.2 :VDF calibration: (6, 1) and time period 0900_1400
+CPU time:1.105248212814331s
+
+Step 3.1: Calculate the VOCs of links: (6, 1) and time period 1400_1800
+Step 3.2 :VDF calibration: (6, 1) and time period 1400_1800
+CPU time:1.568352460861206s
+
+Step 3.1: Calculate the VOCs of links: (6, 1) and time period 1800_0600
+Step 3.2 :VDF calibration: (6, 1) and time period 1800_0600
+CPU time:2.16548752784729s
+
+Step 4: Calibrate daily VDF function for VDF_type:(6, 1)...
+CPU time:1.8804218769073486s
+
+Step 2: Calibrate(6, 2) key coeeficients...
+CPU time:6.235401630401611s
+
+Step 3: Calibrate VDF function of links for VDF_type: (6, 2) and time period...
+Step 3.1: Calculate the VOCs of links: (6, 2) and time period 0600_0900
+Step 3.2 :VDF calibration: (6, 2) and time period 0600_0900
+CPU time:2.0064516067504883s
+
+Step 3.1: Calculate the VOCs of links: (6, 2) and time period 0900_1400
+Step 3.2 :VDF calibration: (6, 2) and time period 0900_1400
+CPU time:3.8878743648529053s
+
+Step 3.1: Calculate the VOCs of links: (6, 2) and time period 1400_1800
+Step 3.2 :VDF calibration: (6, 2) and time period 1400_1800
+CPU time:5.770297288894653s
+
+Step 3.1: Calculate the VOCs of links: (6, 2) and time period 1800_0600
+Step 3.2 :VDF calibration: (6, 2) and time period 1800_0600
+CPU time:7.697731018066406s
+
+Step 4: Calibrate daily VDF function for VDF_type:(6, 2)...
+CPU time:24.57852530479431s
+
+Step 2: Calibrate(6, 3) key coeeficients...
+CPU time:7.293639898300171s
+
+Step 3: Calibrate VDF function of links for VDF_type: (6, 3) and time period...
+Step 3.1: Calculate the VOCs of links: (6, 3) and time period 0600_0900
+Step 3.2 :VDF calibration: (6, 3) and time period 0600_0900
+CPU time:2.24550461769104s
+
+Step 3.1: Calculate the VOCs of links: (6, 3) and time period 0900_1400
+Step 3.2 :VDF calibration: (6, 3) and time period 0900_1400
+CPU time:4.508013010025024s
+
+Step 3.1: Calculate the VOCs of links: (6, 3) and time period 1400_1800
+Step 3.2 :VDF calibration: (6, 3) and time period 1400_1800
+CPU time:6.784524917602539s
+
+Step 3.1: Calculate the VOCs of links: (6, 3) and time period 1800_0600
+Step 3.2 :VDF calibration: (6, 3) and time period 1800_0600
+CPU time:9.1280517578125s
+
+Step 4: Calibrate daily VDF function for VDF_type:(6, 3)...
+CPU time:33.376503467559814s
+
+Step 5: Output...
+END...
