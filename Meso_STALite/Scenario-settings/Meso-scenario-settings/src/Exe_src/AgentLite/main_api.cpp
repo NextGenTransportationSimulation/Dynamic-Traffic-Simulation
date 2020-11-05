@@ -1,3 +1,4 @@
+
 //  Portions Copyright 2019
 // Xuesong (Simon) Zhou
 //   If you help write or modify the code, please also list your names here.
@@ -21,7 +22,7 @@
 
 #include <stack>
 #include <string>
-#include <vector>a
+#include <vector>
 #include <map>
 #include <sstream>
 #include <iostream>
@@ -42,7 +43,7 @@ template <typename T>
 #define _MAX_LABEL_COST 1.0e+15
 
 #define _MAX_AGNETTYPES 4 //because of the od demand store format,the MAX_demandtype must >=g_DEMANDTYPES.size()+1
-#define _MAX_TIMEPERIODS 1
+#define _MAX_TIMEPERIODS 4
 #define _MAX_MEMORY_BLOCKS 20
 
 #define _MAX_LINK_SIZE_IN_A_PATH 1000
@@ -72,7 +73,6 @@ template <typename T>
 #define sprintf_s sprintf
 
 FILE* g_pFileOutputLog = NULL;
-int g_debugging_level = 0;
 
 #define STRING_LENGTH_PER_LINE 50000
 
@@ -146,6 +146,7 @@ public:
 
 	bool OpenCSVFile(string fileName, bool b_required)
 	{
+
 		mFileName = fileName;
 		inFile.open(fileName.c_str());
 
@@ -1476,6 +1477,7 @@ public:
 
 	int link_seq_no;
 	string link_id;
+	string geometry;
 	int traffic_flow_code;
 	int spatial_capacity_in_vehicles;
 	int BWTT_in_simulation_interval;
@@ -1935,7 +1937,7 @@ public:
 		}
 
 			// after dynamic arrays are created for forward star
-		if (g_debugging_level == 2)
+		if (log_out.debug_level  == 2)
 		{
 			log_out << "add outgoing link data into dynamic array" << endl;
 
@@ -1954,7 +1956,7 @@ public:
 				}
 				else
 				{
-					if (g_debugging_level == 3)
+					if (log_out.debug_level  == 3)
 					{
 
 						log_out << "node id= " << g_node_vector[i].node_id << " with "
@@ -2058,7 +2060,7 @@ public:
 		}
 
 
-		if (g_debugging_level >= 2)
+		if (log_out.debug_level  >= 2)
 			log_out << "SP iteration k =  " << iteration_k << ": origin node: " << g_node_vector[origin_node].node_id << endl;
 
 
@@ -2112,7 +2114,7 @@ public:
 
 		m_node_status_array[from_node] = 2;
 
-		if (g_debugging_level >= 2)
+		if (log_out.log_path >= 2)
 		{ 
 			log_out << "SP:scan SE node: " << g_node_vector[from_node].node_id << " with " 
 			<< NodeForwardStarArray[from_node].OutgoingLinkSize  << " outgoing link(s). "<< endl;
@@ -2128,7 +2130,7 @@ public:
 				to_node = NodeForwardStarArray[from_node].OutgoingNodeNoArray[i];
 				link_sqe_no = NodeForwardStarArray[from_node].OutgoingLinkNoArray[i];
 
-				if (g_debugging_level >= 2)
+				if (log_out.log_path >= 2)
 				{
 					log_out << "SP:  checking outgoing node " << g_node_vector[to_node].node_id << endl;
 				}
@@ -2176,7 +2178,7 @@ public:
 //Mark				new_distance = m_label_distance_array[from_node] + pLink->length;
 				new_to_node_cost = m_node_label_cost[from_node] + m_link_genalized_cost_array[link_sqe_no];
 
-							if (g_debugging_level >= 2)
+							if (log_out.log_path)
 								{
 									log_out << "SP:  checking from node " << g_node_vector[from_node].node_id  << 
 										"  to node" << g_node_vector[to_node].node_id << " cost = " << new_to_node_cost << endl;
@@ -2187,7 +2189,7 @@ public:
 				if (new_to_node_cost < m_node_label_cost[to_node]) // we only compare cost at the downstream node ToID at the new arrival time t
 				{
 
-					if (g_debugging_level >= 2)
+					if (log_out.log_path)
 					{
 						log_out << "SP:  updating node: " << g_node_vector[to_node].node_id << " current cost:" << m_node_label_cost[to_node] <<
 							" new cost " << new_to_node_cost << endl;
@@ -2201,7 +2203,7 @@ public:
 					m_node_predecessor[to_node] = from_node;  // pointer to previous physical NODE INDEX from the current label at current node and time
 					m_link_predecessor[to_node] = link_sqe_no;  // pointer to previous physical NODE INDEX from the current label at current node and time
 
-					if (g_debugging_level >= 2)
+					if (log_out.log_path)
 						log_out << "SP: add node " << g_node_vector[to_node].node_id << " new cost:" << new_to_node_cost <<
 						" into SE List " << g_node_vector[to_node].node_id << endl;
 
@@ -2254,7 +2256,7 @@ public:
 
 		}
 
-		if (g_debugging_level >= 2 )
+		if (log_out.log_path)
 			{ 
 			log_out <<  "SPtree at iteration k = " << iteration_k <<  " origin node: " << 
 				g_node_vector[origin_node].node_id  << endl;
@@ -2793,7 +2795,6 @@ void g_ReadDemandFileBasedOnDemandFileList(Assignment& assignment)
 
 			if (format_type.find("column") != string::npos)  // or muliti-column
 			{
-
 
 				bool bFileReady = false;
 				
@@ -3361,6 +3362,9 @@ void g_ReadInputData(Assignment& assignment)
 	std::map<int, int> zone_id_to_centriod_node_id_mapping;  // this is an one-to-one mapping
 	std::map<int, int> zone_id_mapping;  // this is used to mark if this zone_id has been identified or not
 
+	std::map<int, int> zone_id_production; 
+	std::map<int, int> zone_id_attraction; 
+
 	CCSVParser parser;
 	log_out << "Step 1.4: Reading node data in node.csv..."<< endl;
 	if (parser.OpenCSVFile("node.csv", true))
@@ -3388,15 +3392,30 @@ void g_ReadInputData(Assignment& assignment)
 			int zone_id = -1;
 			parser.GetValueByFieldName("zone_id", zone_id);
 
+			parser.GetValueByFieldName("x_coord", node.x,true,false);
+			parser.GetValueByFieldName("y_coord", node.y,true, false);
 
 			if(zone_id>=1)  // this is an activity node // we do not allow zone id of zero
 			{ 
+
+				
 				node.zone_org_id = zone_id; // for physcial nodes because only centriod can have valid zone_id. 
 
 				if (zone_id_mapping.find(zone_id) == zone_id_mapping.end())
 				{
 					//create zone 
 					zone_id_mapping[zone_id] = node_id;
+				}
+
+				if (assignment.assignment_mode == 5)
+				{
+					float production = 0;
+					float attraction = 0;
+					parser.GetValueByFieldName("production", production);
+					parser.GetValueByFieldName("attraction", attraction);
+
+					zone_id_production[zone_id] = production;
+					zone_id_attraction[zone_id] = attraction;
 				}
 			}
 
@@ -3432,6 +3451,9 @@ void g_ReadInputData(Assignment& assignment)
 		// for each zone, we have to also create centriod
 		ozone.zone_id = it->first;  // zone_id
 		ozone.zone_seq_no = g_zone_vector.size(); 
+		ozone.obs_production = zone_id_production[it->first];
+		ozone.obs_attraction = zone_id_attraction[it->first];
+
 		assignment.g_zoneid_to_zone_seq_no_mapping[ozone.zone_id] = ozone.zone_seq_no;  // create the zone id to zone seq no mapping
 
 	// create a centriod
@@ -3450,6 +3472,57 @@ void g_ReadInputData(Assignment& assignment)
 
 	}
 	
+	if (assignment.assignment_mode == 5)  // gravity model.
+	{
+		log_out << "writing demand.csv.." << endl;
+
+
+		FILE* g_pFileODMatrix = NULL;
+		fopen_ss(&g_pFileODMatrix, "demand.csv", "w");
+		if (g_pFileODMatrix == NULL)
+		{
+			log_out << "File demand.csv cannot be opened." << endl;
+			g_ProgramStop();
+		}
+		else
+		{
+			fprintf(g_pFileODMatrix, "o_zone_id,d_zone_id,volume\n");
+
+			float total_attraction = 0;
+
+			for (int d = 0; d < g_zone_vector.size(); d++)
+			{
+				if(g_zone_vector[d].obs_attraction>0)
+				{
+					total_attraction += g_zone_vector[d].obs_attraction;
+				}
+			}
+
+			// reset the estimated production and attraction
+			for (int o = 0; o < g_zone_vector.size(); o++)  // o
+			{
+				if(g_zone_vector[o].obs_production >=0)
+				{
+					for (int d = 0; d < g_zone_vector.size(); d++)  // d
+					{
+						if (g_zone_vector[d].obs_attraction > 0)
+						{ 
+							float value = g_zone_vector[o].obs_production * g_zone_vector[d].obs_attraction / max(0.0001, total_attraction);
+						fprintf(g_pFileODMatrix, "%d,%d,%.4f,\n", g_zone_vector[o].zone_id, g_zone_vector[d].zone_id, value);
+
+						log_out << "o= " << g_zone_vector[o].zone_id << " d= " << g_zone_vector[d].zone_id << ":" <<  value << endl;
+						}
+
+					}
+				}
+
+			}
+
+
+			fclose(g_pFileODMatrix);
+
+		}
+	}
 
 
 	log_out << "number of zones = " << g_zone_vector.size() << endl;
@@ -3510,7 +3583,8 @@ void g_ReadInputData(Assignment& assignment)
 			parser_link.GetValueByFieldName("link_type", link.link_type);
 
 			string movement_str;
-			parser_link.GetValueByFieldName("movement_str", movement_str);
+			parser_link.GetValueByFieldName("movement_str", movement_str, false);
+			parser_link.GetValueByFieldName("geometry", link.geometry,false);
 
 			if (movement_str.size() > 0)  // and valid
 			{
@@ -3699,7 +3773,7 @@ void g_ReadInputData(Assignment& assignment)
 
 	log_out << "number of links =" << assignment.g_number_of_links << endl;
 
-	if (g_debugging_level == 2)
+	if (log_out.debug_level  == 2)
 	{
 		for (int i = 0; i < g_node_vector.size(); i++)
 		{
@@ -3716,7 +3790,7 @@ void g_ReadInputData(Assignment& assignment)
 			}
 			else
 			{
-				if (g_debugging_level == 3)
+				if (log_out.debug_level  == 3)
 				{
 
 					log_out << "node id= " << g_node_vector[i].node_id << " with " << g_node_vector[i].m_outgoing_link_seq_no_vector.size() << " outgoing links." << endl;
@@ -4229,7 +4303,7 @@ void update_link_travel_time_and_cost()
 				// step 2: marginal cost for SO
 				g_link_vector[l].calculate_marginal_cost_for_agent_type(tau, at, PCE_agent_type);
 
-				//if (g_debugging_level >= 3 && assignment.assignment_mode >= 2 && assignment.g_pFileDebugLog != NULL)
+				//if (log_out.debug_level  >= 3 && assignment.assignment_mode >= 2 && assignment.g_pFileDebugLog != NULL)
 				//	fprintf(assignment.g_pFileDebugLog, "Update link cost: link %d->%d: tau = %d, at = %d, travel_marginal =  %.3f\n",
 
 				//		g_node_vector[g_link_vector[l].from_node_seq_no].node_id,
@@ -4243,12 +4317,18 @@ void update_link_travel_time_and_cost()
 }
 
 
-void g_reset_and_update_link_volume_based_on_ODME_columns(int number_of_links)
+void g_reset_and_update_link_volume_based_on_ODME_columns(int number_of_links, int iteration_no)
 {
 
 	int tau;
 	int at;
 	int l;
+	float total_gap = 0;
+	float sub_total_gap_link_count = 0;
+	float sub_total_gap_P_count = 0;
+	float sub_total_gap_A_count = 0;
+
+
 	// reset the link volume
 	for (l = 0; l < number_of_links; l++)
 	{
@@ -4343,8 +4423,18 @@ void g_reset_and_update_link_volume_based_on_ODME_columns(int number_of_links)
 				
 				int tau = 0;
 				g_link_vector[l].est_count_dev = g_link_vector[l].flow_volume_per_period[tau] - g_link_vector[l].obs_count;
+				if (log_out.debug_level  == 2)
+				{ 
+				log_out << "link " << g_node_vector [g_link_vector[l].from_node_seq_no].node_id <<
+					"->" << g_node_vector[g_link_vector[l].to_node_seq_no].node_id
+					<< "obs:, " << g_link_vector[l].obs_count << "est:, " << g_link_vector[l].flow_volume_per_period[tau]
+					<< "dev:," << g_link_vector[l].est_count_dev << endl;
+				}
+
 			
-			
+				total_gap += abs(g_link_vector[l].est_count_dev);
+				sub_total_gap_link_count += g_link_vector[l].est_count_dev / g_link_vector[l].obs_count;
+
 			}
 		}
 
@@ -4355,15 +4445,40 @@ void g_reset_and_update_link_volume_based_on_ODME_columns(int number_of_links)
 			{
 				g_zone_vector[o].est_attraction_dev = g_zone_vector[o].est_attraction - g_zone_vector[o].obs_attraction;
 
+			
+				if (log_out.debug_level  == 2)
+				{
+					log_out << "zone " << g_zone_vector[o].zone_id << "A: obs:" << g_zone_vector[o].obs_attraction <<
+						",est:," << g_zone_vector[o].est_attraction << ",dev:," << g_zone_vector[o].est_attraction_dev << endl;
+				}
+
+				total_gap += abs(g_zone_vector[o].est_attraction_dev);
+				sub_total_gap_A_count += g_zone_vector[o].est_attraction_dev / g_zone_vector[o].obs_attraction;
+
 			}
 
 			if (g_zone_vector[o].obs_production >= 1)  // with observation
 			{
 				g_zone_vector[o].est_production_dev = g_zone_vector[o].est_production - g_zone_vector[o].obs_production;
 
+				if (log_out.debug_level  == 2)
+				{
+				log_out << "zone " << g_zone_vector[o].zone_id << "P: obs:" << g_zone_vector[o].obs_production <<
+					",est:," << g_zone_vector[o].est_production << ",dev:," << g_zone_vector[o].est_production_dev << endl;
+				}
+
+				total_gap += abs(g_zone_vector[o].est_production_dev);
+				sub_total_gap_P_count += g_zone_vector[o].est_production_dev / g_zone_vector[o].obs_production;
+
+
 			}
-			// print out the deviatio as log
+
+
 		}
+		log_out << "ODME #" << iteration_no<< " total abs gap= " << total_gap <<
+			",subg_link: " << sub_total_gap_link_count*100 <<
+			",subg_P: " << sub_total_gap_P_count*100 <<
+			",subg_A: " << sub_total_gap_A_count * 100 << endl;
 }
 
 void g_update_gradient_cost_and_assigned_flow_in_column_pool(Assignment& assignment, int inner_iteration_number)
@@ -4538,7 +4653,7 @@ void g_column_pool_optimization(Assignment& assignment, int column_updating_iter
 		log_out << "Current iteration number: " << n << endl;
 		g_update_gradient_cost_and_assigned_flow_in_column_pool(assignment, n);
 		
-		if(g_debugging_level>=3)
+		if(log_out.debug_level >=3)
 		{ 
 		for (int i = 0; i < g_link_vector.size(); i++) 
 		{
@@ -4567,12 +4682,13 @@ void g_output_simulation_result(Assignment& assignment)
 	}
 	else
 	{
-		if(assignment.assignment_mode <=1)
+		if(assignment.assignment_mode <=1 || assignment.assignment_mode == 3)  //ODME
 		{
 		// Option 2: BPR-X function
-		fprintf(g_pFileLinkMOE, "link_id,from_node_id,to_node_id,time_period,volume,travel_time,speed,VOC,");
+		fprintf(g_pFileLinkMOE, "link_id,from_node_id,to_node_id,time_period,volume,travel_time,speed,VOC,geometry,");
 
-
+		if (assignment.assignment_mode == 3) //ODME
+			fprintf(g_pFileLinkMOE, "obs_count,dev,");
 
 		fprintf(g_pFileLinkMOE, "notes\n");
 		
@@ -4585,7 +4701,7 @@ void g_output_simulation_result(Assignment& assignment)
 			for (int tau = 0; tau < assignment.g_number_of_demand_periods; tau++)
 			{
 				float speed = g_link_vector[l].length / (max(0.001, g_link_vector[l].VDF_period[tau].avg_travel_time) / 60.0);
-				fprintf(g_pFileLinkMOE, "%s,%d,%d,%s,%.3f,%.3f,%.3f,%.3f,",
+				fprintf(g_pFileLinkMOE, "%s,%d,%d,%s,%.3f,%.3f,%.3f,%.3f,\"%s\",",
 					g_link_vector[l].link_id.c_str(),
 
 					g_node_vector[g_link_vector[l].from_node_seq_no].node_id,
@@ -4595,22 +4711,33 @@ void g_output_simulation_result(Assignment& assignment)
 					g_link_vector[l].flow_volume_per_period[tau],
 					g_link_vector[l].VDF_period[tau].avg_travel_time,
 					speed,  /* 60.0 is used to convert min to hour */
-					g_link_vector[l].VDF_period[tau].VOC);
+					g_link_vector[l].VDF_period[tau].VOC,
+					g_link_vector[l].geometry.c_str());
 		
+				if (assignment.assignment_mode == 3)  //ODME
+				{ 
+					if( g_link_vector[l].obs_count >= 1) //ODME
+						fprintf(g_pFileLinkMOE, "%.1f,%.1f,", g_link_vector[l].obs_count, g_link_vector[l].est_count_dev);
+					else
+						fprintf(g_pFileLinkMOE, ",,");
 
+				}
+				fprintf(g_pFileLinkMOE, "period-based\n");
 			}
 
 
 
-			fprintf(g_pFileLinkMOE, "period-based\n");
 			}
 		}
 
-		if (assignment.assignment_mode == 2)  // space time based simulation
+		if (assignment.assignment_mode == 2)  // space time based simulation // ODME
 		{
 			// Option 2: BPR-X function
 			fprintf(g_pFileLinkMOE, "link_id,from_node_id,to_node_id,time_period,volume,CA,CD,density,queue,travel_time,waiting_time_in_sec,speed,");
-			fprintf(g_pFileLinkMOE, "notes\n");
+
+
+				
+				fprintf(g_pFileLinkMOE, "notes\n");
 
 
 			for (int l = 0; l < g_link_vector.size(); l++) //Initialization for all nodes
@@ -4675,6 +4802,7 @@ void g_output_simulation_result(Assignment& assignment)
 							travel_time,
 							avg_waiting_time_in_sec,
 							speed);
+
 						fprintf(g_pFileLinkMOE, "simulation-based\n");
 
 					}
@@ -4741,7 +4869,7 @@ void g_output_simulation_result(Assignment& assignment)
 	}
 	else
 	{
-		fprintf(g_pFileODMOE, "agent_id,o_zone_id,d_zone_id,path_id,o_node_id,d_node_id,agent_type,demand_period,volume,toll,travel_time,distance,node_sequence,link_sequence,time_sequence,time_decimal_sequence,link_travel_time_sequence,\n");
+		fprintf(g_pFileODMOE, "agent_id,o_zone_id,d_zone_id,path_id,agent_type,demand_period,volume,toll,travel_time,distance,node_sequence,link_sequence,time_sequence,time_decimal_sequence,link_travel_time_sequence,geometry\n");
 
 
 		int count = 1;
@@ -4771,6 +4899,7 @@ void g_output_simulation_result(Assignment& assignment)
 
 		for (o = 0; o < zone_size; o++)
 		{ 
+			if(g_zone_vector[o].zone_id %100 ==0)
 			log_out << "o zone id =  " << g_zone_vector[o].zone_id << endl;
 
 			for (at = 0; at < agent_type_size; at++)
@@ -4822,45 +4951,16 @@ void g_output_simulation_result(Assignment& assignment)
 									virtual_link_delta = 0;
 
 
-								int o_node_id = g_node_vector[g_zone_vector[o].node_seq_no].node_id;
-								int d_node_id = g_node_vector[g_zone_vector[d].node_seq_no].node_id;
-
-								if(p_column->bfixed_route == true)  //from the first routes
-								{
-									if (it->second.m_node_size >= 2)  
-									{
-										o_node_id = g_node_vector[it->second.path_node_vector[0]].node_id;  // first node in the path sequence
-										d_node_id = g_node_vector[it->second.path_node_vector[it->second.m_node_size - 1]].node_id;  // last node in the path sequence
-
-									}
-								}
-								else
-								{
-
-									if (it->second.m_node_size >= 4)  // not from fixed route input 
-									{
-										o_node_id = g_node_vector[it->second.path_node_vector[1]].node_id;  // second node in the path sequence
-										d_node_id = g_node_vector[it->second.path_node_vector[it->second.m_node_size - 2]].node_id;  // second last node in the path sequence
-
-										if (d % 100 == 0)
-										{
-											log_out << "OD pair with physical path = " << g_zone_vector[o].zone_id << "->" << g_zone_vector[d].zone_id << endl;
-										}
-
-									}
-								}
 
 					if(assignment.assignment_mode == 1 || assignment.assignment_mode == 3) // assignment_mode = 1, path flow mode
 					{
 
 								buffer_len = 0;
-								buffer_len = sprintf(str_buffer, "%d,%d,%d,%d,%d,%d,%s,%s,%.2f,%.1f,%.4f,%.4f,",
+								buffer_len = sprintf(str_buffer, "%d,%d,%d,%d,%s,%s,%.2f,%.1f,%.4f,%.4f,",
 									count,
 									g_zone_vector[o].zone_id,
 									g_zone_vector[d].zone_id,
 									it->second.path_seq_no,
-									o_node_id,
-									d_node_id,
 									assignment.g_AgentTypeVector[at].agent_type.c_str(),
 									assignment.g_DemandPeriodVector[tau].demand_period.c_str(),
 									it->second.path_volume,
@@ -4906,13 +5006,28 @@ void g_output_simulation_result(Assignment& assignment)
 									buffer_len += sprintf(str_buffer + buffer_len, "%.2f;", path_time_vector[nt+1]- path_time_vector[nt]);
 								}
 
-								buffer_len += sprintf(str_buffer + buffer_len, "\n");
+								buffer_len += sprintf(str_buffer + buffer_len, ",");
 
 								if (buffer_len >= STRING_LENGTH_PER_LINE - 1)
 								{
 									log_out << "Error: buffer_len >= STRING_LENGTH_PER_LINE." << endl;
 									g_ProgramStop();
 								}
+
+								buffer_len += sprintf(str_buffer + buffer_len,  "\"LINESTRING (");
+
+								for (int ni = 0 + virtual_link_delta; ni < it->second.m_node_size - virtual_link_delta; ni++)
+								{
+									buffer_len += sprintf(str_buffer + buffer_len, "%f %f", g_node_vector[it->second.path_node_vector[ni]].x,
+										g_node_vector[it->second.path_node_vector[ni]].y);
+									if (ni != it->second.m_node_size - virtual_link_delta - 1)
+										buffer_len += sprintf(str_buffer + buffer_len, ", ");
+								}
+
+
+								buffer_len += sprintf(str_buffer + buffer_len, ")\"\n");
+
+
 
 
 								fprintf(g_pFileODMOE, "%s", str_buffer, buffer_len);
@@ -4924,13 +5039,11 @@ void g_output_simulation_result(Assignment& assignment)
 						for (int vi = 0; vi < it->second.agent_simu_id_vector.size(); vi++)
 						{
 							buffer_len = 0;
-							buffer_len = sprintf(str_buffer, "%d,%d,%d,%d,%d,%d,%s,%s,1,%.1f,%.4f,%.4f,",
+							buffer_len = sprintf(str_buffer, "%d,%d,%d,%d,%s,%s,1,%.1f,%.4f,%.4f,",
 								count,
 								g_zone_vector[o].zone_id,
 								g_zone_vector[d].zone_id,
 								it->second.path_seq_no,
-								o_node_id,
-								d_node_id,
 								assignment.g_AgentTypeVector[at].agent_type.c_str(),
 								assignment.g_DemandPeriodVector[tau].demand_period.c_str(),
 								path_toll,
@@ -5019,6 +5132,19 @@ void g_output_simulation_result(Assignment& assignment)
 
 void g_output_simulation_result_for_signal_api(Assignment& assignment)
 {
+	bool movement_str_flag = false;
+	for (int l = 0; l < g_link_vector.size(); l++) //Initialization for all nodes
+	{
+			if (g_link_vector[l].movement_str.length() >= 1)
+			{
+				movement_str_flag = true;
+			}
+
+	}
+
+	if (movement_str_flag == false)  // no movement_str data
+		return;
+
 	log_out << "writing link_performance_sig.csv.." << endl;
 
 	int b_debug_detail_flag = 0;
@@ -5044,7 +5170,6 @@ void g_output_simulation_result_for_signal_api(Assignment& assignment)
 				{
 					if (g_link_vector[l].movement_str.length() >= 1)
 					{
-
 
 						float speed = g_link_vector[l].length / (max(0.001, g_link_vector[l].VDF_period[tau].avg_travel_time) / 60.0);
 						fprintf(g_pFileLinkMOE, "%s,%d,%d,%s,%s,%s,%d,%d,%.3f,%.3f,%.3f,%.3f,",
@@ -5583,7 +5708,7 @@ double network_assignment(int iteration_number, int assignment_mode, int column_
 			g_reset_and_update_link_volume_based_on_columns(g_link_vector.size(), iteration_number, true);  // we can have a recursive formulat to reupdate the current link volume by a factor of k/(k+1), and use the newly generated path flow to add the additional 1/(k+1)
 		}
 
-		if (g_debugging_level >= 3)
+		if (log_out.debug_level  >= 3)
 		{
 		log_out << "Results:" << endl;
 			for (int i = 0; i < g_link_vector.size(); i++) {
@@ -6066,7 +6191,11 @@ void Assignment::STTrafficSimulation()
 									pLink->ExitQueue.pop_front();
 									p_agent->m_bCompleteTrip = true;
 									m_LinkCumulativeDeparture[link][t] += 1;
+
+#pragma omp critical
+{
 									TotalCumulative_Departure_Count += 1;
+}
 
 								}
 								else
@@ -6238,13 +6367,12 @@ void Assignment::Demand_ODME(int OD_updating_iterations)
 
 	for (int s = 0; s < OD_updating_iterations; s++)
 	{
-		log_out << "column pool updating: no.  " << s << endl;
 
 		float total_gap = 0;
 		float total_relative_gap = 0;
 		float total_gap_count = 0;
 		//step 2.1
-		g_reset_and_update_link_volume_based_on_ODME_columns(g_link_vector.size());  // we can have a recursive formulat to reupdate the current link volume by a factor of k/(k+1), and use the newly generated path flow to add the additional 1/(k+1)
+		g_reset_and_update_link_volume_based_on_ODME_columns(g_link_vector.size(),s);  // we can have a recursive formulat to reupdate the current link volume by a factor of k/(k+1), and use the newly generated path flow to add the additional 1/(k+1)
 		//step 2.2: based on newly calculated path volumn, update volume based travel time, and update volume based measurement error/deviation
 
 		//step 3: calculate shortest path at inner iteration of column flow updating
@@ -6283,8 +6411,8 @@ void Assignment::Demand_ODME(int OD_updating_iterations)
 
 							it_begin = p_column->path_node_sequence_map.begin();
 							it_end = p_column->path_node_sequence_map.end();
-
-							for (it = it_begin; it != it_end; it++) // for each k 
+							int i = 0;
+							for (it = it_begin; it != it_end; it++, i++) // for each k 
 							{
 								path_gradient_cost = 0;
 								path_distance = 0;
@@ -6317,6 +6445,7 @@ void Assignment::Demand_ODME(int OD_updating_iterations)
 
 								}
 
+								float est_count_dev = 0;
 								for (nl = 0; nl < it->second.m_link_size; nl++)  // arc a
 								{
 									// step 3.3 link flow gradient 
@@ -6325,11 +6454,18 @@ void Assignment::Demand_ODME(int OD_updating_iterations)
 
 									if(g_link_vector[link_seq_no].obs_count>=1)
 									{ 
-										if(g_link_vector[link_seq_no].upper_bound_flag ==0)
-										path_gradient_cost += g_link_vector[link_seq_no].est_count_dev;
-
-										if (g_link_vector[link_seq_no].upper_bound_flag == 1 && g_link_vector[link_seq_no].est_count_dev>0)
+										if (g_link_vector[link_seq_no].upper_bound_flag == 0)
+										{
 											path_gradient_cost += g_link_vector[link_seq_no].est_count_dev;
+											est_count_dev += g_link_vector[link_seq_no].est_count_dev;
+										}
+
+										if (g_link_vector[link_seq_no].upper_bound_flag == 1 && g_link_vector[link_seq_no].est_count_dev > 0)
+										{
+											path_gradient_cost += g_link_vector[link_seq_no].est_count_dev;
+											est_count_dev += g_link_vector[link_seq_no].est_count_dev;
+										}
+
 
 									}
 								}
@@ -6337,8 +6473,33 @@ void Assignment::Demand_ODME(int OD_updating_iterations)
 
 								it->second.path_gradient_cost = path_gradient_cost;
 
-								step_size = 1.0 / (s + 2);  
-								it->second.path_volume = max(1, it->second.path_volume - step_size * it->second.path_gradient_cost);
+								step_size = 0.01;
+								float prev_path_volume = it->second.path_volume;
+								float change = step_size * it->second.path_gradient_cost;
+								
+								float change_lower_bound = it->second.path_volume * 0.05 * (-1);
+								float change_upper_bound = it->second.path_volume * 0.05 ;
+
+								if (change < change_lower_bound)
+									change = change_lower_bound;  // reset
+
+								if (change > change_upper_bound)
+									change = change_upper_bound;  // reset
+
+								it->second.path_volume = max(1, it->second.path_volume - change);
+
+								if (log_out.log_odme == 1)
+								{ 
+								log_out << "OD " << o << "-> " << d << " path id:" << i << ", prev_vol"
+									<< prev_path_volume << ", gradient_cost = " << it->second.path_gradient_cost 
+									<< " link," << g_link_vector[link_seq_no].est_count_dev
+									<< " P," << g_zone_vector[o].est_production_dev
+									<< " A," << g_zone_vector[o].est_attraction_dev
+									<< "proposed change = " << step_size * it->second.path_gradient_cost 
+									<< "actual change = " << change
+									<<"new vol = " << it->second.path_volume <<endl;
+								}
+
 
 							}
 
