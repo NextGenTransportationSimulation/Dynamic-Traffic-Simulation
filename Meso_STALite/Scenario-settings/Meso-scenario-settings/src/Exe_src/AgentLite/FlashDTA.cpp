@@ -52,6 +52,8 @@ private:
 template < typename C, typename T = std::char_traits<C> >
 struct basic_teestream : public std::basic_ostream<C, T>
 {
+	// add more controls of the debug logs
+	//
 	int debug_level;
 	int log_sig;
 	int log_odme;
@@ -95,7 +97,7 @@ teestream log_out(std::cout, file);
 int main(int argc, TCHAR* argv[], TCHAR* envp[])
 {
 
-
+	// reset all the log files to defult 0: not output; if want to output these logs set to 1
 	log_out << "STALite Log" << std::fixed << std::setw(12) << '\n';
 	log_out.debug_level = 0;
 	log_out.log_sig = 0;
@@ -128,7 +130,11 @@ int main(int argc, TCHAR* argv[], TCHAR* envp[])
 				string assignment_mode_str;
 				parser_settings.GetValueByFieldName("number_of_iterations", iteration_number, true, true);
 				parser_settings.GetValueByFieldName("assignment_mode", assignment_mode_str);
-
+				// these are the assignment modes
+				// two usually methods are ue (user equilibrium) and dta (dynamic traffic assignment)
+				// the main difference of these two methods are different output in link_performance.csv
+				// for basic uses set assignment mode to 'ue'
+				// for more detailed link performances (one minute) set 'dta'
 				if (assignment_mode_str == "lue")
 					assignment_mode = 0;
 				else if (assignment_mode_str == "ue")
@@ -147,7 +153,10 @@ int main(int argc, TCHAR* argv[], TCHAR* envp[])
 					g_ProgramStop();
 				}
 
+				// iteration number of reassignment
 				parser_settings.GetValueByFieldName("column_updating_iterations", column_updating_iterations, true, true);
+
+				// the start interation of generating signals, if there is no signals set this number larger than the iteration number 
 				parser_settings.GetValueByFieldName("signal_updating_iterations", signal_updating_iterations, true, false);
 				
 
@@ -168,6 +177,7 @@ int main(int argc, TCHAR* argv[], TCHAR* envp[])
 		}
 	}
 
+	// only when assignement equals to 4, will generate the signal timing based on the link volume and capacity
 	if (assignment_mode == 4)
 	{
 		SignalAPI(0, assignment_mode, 1);

@@ -43,7 +43,7 @@ template <typename T>
 #define _MAX_LABEL_COST 1.0e+15
 
 #define _MAX_AGNETTYPES 4 //because of the od demand store format,the MAX_demandtype must >=g_DEMANDTYPES.size()+1
-#define _MAX_TIMEPERIODS 4
+#define _MAX_TIMEPERIODS 4 // time period set to 4: mid night, morning peak, mid-day and afternoon peak
 #define _MAX_MEMORY_BLOCKS 20
 
 #define _MAX_LINK_SIZE_IN_A_PATH 1000
@@ -3407,6 +3407,7 @@ void g_ReadInputData(Assignment& assignment)
 					zone_id_mapping[zone_id] = node_id;
 				}
 
+				// for od calibration, I think we don't need to implement for now
 				if (assignment.assignment_mode == 5)
 				{
 					float production = 0;
@@ -3472,6 +3473,7 @@ void g_ReadInputData(Assignment& assignment)
 
 	}
 	
+	// for od calibration, I think we don't need to implement for now
 	if (assignment.assignment_mode == 5)  // gravity model.
 	{
 		log_out << "writing demand.csv.." << endl;
@@ -4316,7 +4318,7 @@ void update_link_travel_time_and_cost()
 	}
 }
 
-
+// changes here are also for odmes, don't need to implement the changes in this function for now
 void g_reset_and_update_link_volume_based_on_ODME_columns(int number_of_links, int iteration_no)
 {
 
@@ -5039,6 +5041,7 @@ void g_output_simulation_result(Assignment& assignment)
 						for (int vi = 0; vi < it->second.agent_simu_id_vector.size(); vi++)
 						{
 							buffer_len = 0;
+							// some bugs for output link performances before
 							buffer_len = sprintf(str_buffer, "%d,%d,%d,%d,%s,%s,1,%.1f,%.4f,%.4f,",
 								count,
 								g_zone_vector[o].zone_id,
@@ -6259,6 +6262,7 @@ void Assignment::STTrafficSimulation()
 		}  // departure time events
 }
 
+// updates for OD re-generations
 void Assignment::Demand_ODME(int OD_updating_iterations)
 {
 	// step 1: read measurement.csv
