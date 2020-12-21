@@ -47,15 +47,11 @@ public:
 
 		b_debug_detail_flag = 1;
 
-		g_pFileDebugLog = NULL;
 		g_informationCount = 0;
 
 
 		SYSTEMTIME st;
 		GetLocalTime(&st);
-		g_pFileDebugLog = fopen("log.txt", "at");
-		fprintf(g_pFileDebugLog, "Logging Time: %d/%d/%d_%d:%d:%d:%d---------------------------------------\n",st.wYear,st.wMonth,st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
-		fclose(g_pFileDebugLog);
 		messageType_int_to_string[0] = "MSG";//message
 		messageType_int_to_string[1] = "OUT";//output
 		messageType_int_to_string[2] = "WAR";//Warning
@@ -82,12 +78,12 @@ public:
 
 	bool b_with_loaded_data;
 
-	FILE* g_pFileDebugLog;
+
 	std::map<int, char*> messageType_int_to_string;
 
 	void WriteLog(int messageType, string info, int level)
 	{
-		if (signal_updating_output == 1)
+		if (log_out.log_sig)
 		{
 			string padding = "";
 		if (level > 1)
@@ -106,11 +102,7 @@ public:
 			padding = "++++++++++++++++++++++++++++++";
 		}
 
-		g_pFileDebugLog = fopen("log.txt", "at");
-		fprintf(g_pFileDebugLog, "Info_ID: %d| Info_Type: %s \t| Info: %s%s\n",  g_informationCount, messageType_int_to_string[messageType], padding.c_str(), info.c_str());
-		fclose(g_pFileDebugLog);
-
-			log_out << "Info_ID: " << g_informationCount << "| Info_Type: " << messageType_int_to_string[messageType] << " \t| Info: "<< padding.c_str()  << info.c_str() << endl;
+		log_out << "Info_ID: " << g_informationCount << "| Info_Type: " << messageType_int_to_string[messageType] << " \t| Info: "<< padding.c_str()  << info.c_str() << endl;
 		
 		//OutputDebugStringA(szLog);
 		g_informationCount++;
@@ -408,6 +400,8 @@ public:
 
 	string LOS;
 
+	double default_volume_T = 30;
+
 	void PerformQEM(int nodeID)
 	{
 		MainSigModual.WriteLog(0, "Data Loading : Movement Volume of Main Node", 1);
@@ -479,34 +473,71 @@ public:
 	void AddMovementVolume_from_LinkPerformance()
 	{
 		CCSVParser parser_link_Performance;
+		int record = 0;
 		if (parser_link_Performance.OpenCSVFile("link_performance_sig.csv", true))
 		{
 
 			float demand_duration_in_min = max(15, MainSigModual.g_LoadingEndTimeInMin - MainSigModual.g_LoadingStartTimeInMin);
-				
 
 
-			while (parser_link_Performance.ReadRecord())  // if this line contains [] mark, then we will also read field headers.
+			bool flag_reading = parser_link_Performance.ReadRecord();
+			if (record == 0 && flag_reading == false)
 			{
-				string linkID;
-				parser_link_Performance.GetValueByFieldName("link_id", linkID);
+				for (size_t m = 1; m <= movement_Range; m++)
+				{
+					if (m % 3 == 2&& movement_Array[m].Enable==true)
+					{
+						float hourly_volume;
+						hourly_volume = default_volume_T / (demand_duration_in_min / 60);
+						movement_Array[m].Volume = hourly_volume;
+					}
+
+				}
+
+				return;
+			}
+			while (flag_reading)  // if this line contains [] mark, then we will also read field headers.
+			{
+				record++;
+				string linkID_Link_Performance;
+				parser_link_Performance.GetValueByFieldName("link_id", linkID_Link_Performance);
 
 				string demand_period;
 				parser_link_Performance.GetValueByFieldName("time_period", demand_period);
 
-				if(demand_period.length () > 0)
-				{ 
-				for (size_t m = 1; m <= movement_Range; m++)
+				if (demand_period.length() > 0)
 				{
-					if (movement_Array[m].Enable == true && linkID == movement_Array[m].linkID)
+					int flag_vacancy = 0;
+					float volume_demand_period_array[13];
+					for (size_t m = 1; m <= movement_Range; m++)
 					{
-						float volume_demand_period;
-						parser_link_Performance.GetValueByFieldName("volume", volume_demand_period);
-
-						float hourly_volume = volume_demand_period / (demand_duration_in_min/60);
-						movement_Array[m].Volume = hourly_volume;
+						if (movement_Array[m].Enable == true && linkID_Link_Performance == movement_Array[m].linkID)
+						{
+							float volume_demand_period;
+							parser_link_Performance.GetValueByFieldName("volume", volume_demand_period);
+							if (volume_demand_period == 0)
+							{
+								flag_vacancy++;
+							}
+							volume_demand_period_array[m] = volume_demand_period;
+						}
 					}
-				}
+
+					for (size_t m = 1; m <= movement_Range; m++)
+					{
+						float hourly_volume;
+						if (flag_vacancy == 12 && m % 3 == 2&& movement_Array[m].Enable == true)
+						{
+							hourly_volume = default_volume_T / (demand_duration_in_min / 60);
+						}
+						else
+						{
+							hourly_volume = volume_demand_period_array[m] / (demand_duration_in_min / 60);
+
+						}
+						movement_Array[m].Volume = hourly_volume;
+
+					}
 
 				}
 			}
@@ -823,6 +854,10 @@ public:
 			{
 				for (size_t so = 0; so < movement_Array[m].StageNo_in_Order.size(); so++)
 				{
+					if (movement_Array[m].StageNo_in_Order[so] > stage_Range)
+					{
+						movement_Array[m].StageNo_in_Order[so] = stage(stage_Range);
+					}
 					g_info_String = "StageNo of Movement_";
 					g_info_String.append(movement_str_array[m]);
 					g_info_String.append(": ");
@@ -947,8 +982,17 @@ public:
 	{
 		for (size_t s = 1; s <= stage_Range; s++)
 		{
-//			green_Time_Stage_Array[i] = y_Max_Stage_Array[i] * c_Min / x_c_output;
-			green_Time_Stage_Array[s] = max(minGreenTime, y_Max_Stage_Array[s] * c_Min / y_StageMax);
+			//			green_Time_Stage_Array[i] = y_Max_Stage_Array[i] * c_Min / x_c_output;
+
+			if (y_StageMax == 0)
+			{
+				green_Time_Stage_Array[s] = minGreenTime;
+			}
+			else
+			{
+				green_Time_Stage_Array[s] = max(minGreenTime, y_Max_Stage_Array[s] * c_Min / max(0.1, y_StageMax));
+
+			}
 
 			green_Time_Stage_Array[s] = (int)(green_Time_Stage_Array[s] + 0.5);
 			effective_Green_Time_Stage_Array[s] = green_Time_Stage_Array[s] - t_L + t_Yellow + t_AR;
@@ -1044,7 +1088,7 @@ public:
 						g_info_String.append(movement_str_array[m]);
 						g_info_String.append(": ");
 						g_info_String.append(to_string(v_over_C_by_Stage_and_Movement_Matrix[s][m]));
-						MainSigModual.WriteLog(1, g_info_String, 3);
+						MainSigModual.WriteLog(1, g_info_String, 3);						
 					}
 				}
 			}
@@ -1384,7 +1428,7 @@ void g_sig_ReadInputData(CMainSigModual& MainSigModual)
 
 
 			parser_link.GetValueByFieldName("link_type", link.link_type);
-
+			parser_link.GetValueByFieldName("geometry", link.geometry, false);
 
 			float length = 1.0; // km or mile
 			float free_speed = 1.0;
@@ -1425,7 +1469,7 @@ void g_sig_ReadInputData(CMainSigModual& MainSigModual)
 			// map link data to signal node map.
 
 			string movement_str;
-			parser_link.GetValueByFieldName("movement_str", movement_str);
+			parser_link.GetValueByFieldName("movement_str", movement_str,false);
 
 
 			if (movement_str.size() > 0)  // and valid
@@ -1460,8 +1504,6 @@ void g_sig_ReadInputData(CMainSigModual& MainSigModual)
 		g_info_String = "Number of Links = ";
 		g_info_String.append(to_string(MainSigModual.g_number_of_links));
 		MainSigModual.WriteLog(0, g_info_String, 2);
-
-//	fprintf(g_pFileOutputLog, "number of links =,%d\n", MainSigModual.g_number_of_links);
 
 		MainSigModual.b_with_loaded_data = true;
 };
@@ -1503,7 +1545,7 @@ double SignalAPI(int iteration_number, int MainSigModual_mode, int signal_updati
 	}
 	else
 	{
-		fprintf(g_pFileTimingArc, "link_id,from_node_id,to_node_id,time_window,time_interval,travel_time_delta,capacity,cycle_no,cycle_length,green_time,red_time,main_node_id,stage,movement_str,notes,\n");
+		fprintf(g_pFileTimingArc, "link_id,from_node_id,to_node_id,time_window,time_interval,travel_time_delta,capacity,cycle_no,cycle_length,green_time,red_time,main_node_id,stage,movement_str,notes,geometry\n");
 
 		for (std::map<int, CSignalNode>::iterator it = g_signal_node_map.begin(); it != g_signal_node_map.end(); ++it)
 		{
@@ -1511,7 +1553,7 @@ double SignalAPI(int iteration_number, int MainSigModual_mode, int signal_updati
 
 			log_out << "Signal timing updating for main node id " << it->first << ":" << endl;
 
-			int cycle_time_in_sec = max(10, sn.c_Final+0.5);
+			int cycle_time_in_sec = max(10, sn.c_Final + 0.5);
 			int number_of_cycles = (MainSigModual.g_LoadingEndTimeInMin - MainSigModual.g_LoadingStartTimeInMin) * 60 / cycle_time_in_sec;  // unit: seconds;
 			int offset_in_sec = 0;
 			int g_loading_start_time_in_sec = MainSigModual.g_LoadingStartTimeInMin * 60 + offset_in_sec;
@@ -1539,8 +1581,8 @@ double SignalAPI(int iteration_number, int MainSigModual_mode, int signal_updati
 							int end_min = global_end_time_in_sec / 60 - end_hour * 60;
 							int end_sec = global_end_time_in_sec % 60;
 
-							int from_node_id = MainSigModual.m_sig_node_vector[MainSigModual.m_sig_link_vector[sn.movement_Array[m].LinkSeqNo].from_node_seq_no].node_id;
-							int to_node_id = MainSigModual.m_sig_node_vector[MainSigModual.m_sig_link_vector[sn.movement_Array[m].LinkSeqNo].to_node_seq_no].node_id;
+							string from_node_id = MainSigModual.m_sig_node_vector[MainSigModual.m_sig_link_vector[sn.movement_Array[m].LinkSeqNo].from_node_seq_no].node_id;
+							string to_node_id = MainSigModual.m_sig_node_vector[MainSigModual.m_sig_link_vector[sn.movement_Array[m].LinkSeqNo].to_node_seq_no].node_id;
 							//						float capacity = sn.green_Time_Stage_Array[StageNo] * sn.saturation_Flow_Rate_Matrix[StageNo][m] / 3600.0;
 							float capacity = sn.green_Time_Stage_Array[StageNo] * 1800.0 / 3600.0;
 							//float capacity = sn.capacity_by_Stage_and_Movement_Matrix[StageNo][m]/60;
@@ -1549,7 +1591,7 @@ double SignalAPI(int iteration_number, int MainSigModual_mode, int signal_updati
 
 							float redTime = cycle_time_in_sec - sn.green_Time_Stage_Array[StageNo];
 
-							fprintf(g_pFileTimingArc, "%s,%d,%d,%02d%02d:%02d_%02d%02d:%02d,-1,-1,%f,%d,%d,%f,%f,%d,%d,%s,%d;%d\n",
+							fprintf(g_pFileTimingArc, "%s,%d,%d,%02d%02d:%02d_%02d%02d:%02d,-1,-1,%f,%d,%d,%f,%f,%d,%d,%s,%d;%d,\"%s\"\n",
 								MainSigModual.m_sig_link_vector[sn.movement_Array[m].LinkSeqNo].link_id.c_str(),
 								from_node_id,
 								to_node_id,
@@ -1567,7 +1609,8 @@ double SignalAPI(int iteration_number, int MainSigModual_mode, int signal_updati
 								it->first,
 								StageNo,
 								sn.movement_str_array[m].c_str(),
-								m, so
+								m, so,
+								MainSigModual.m_sig_link_vector[sn.movement_Array[m].LinkSeqNo].geometry.c_str()
 							);
 						}
 
