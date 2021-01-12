@@ -1,0 +1,53 @@
+STALite Log           
+Step 1: Reading input data
+Step 1.1: Reading section [demand_period] in setting.csv...
+number of demand periods = 1
+Step 1.2: Reading section [link_type] in setting.csv...
+important: traffic_flow_code on link type 41000 is 3
+number of link types = 2
+Step 1.3: Reading section [agent_type] in setting.csv...
+number of agent typess = 1
+Step 1.4: Reading node data in node.csv...
+number of nodes = 819
+Step 1.5: Initializing O-D zone vector...
+number of zones = 12
+Step 1.6: Reading link data in link.csv... 
+number of links = 822
+number of links =846
+Step 1.7: Reading service arc in timing.csv...
+
+Step 1.8: Reading file section [demand_file_list] in setting.csv...
+number of timing records = 0
+
+allocating 4D memory for 0 zones
+allocating 3D memory for 0
+
+Step 1.8: Reading file section [demand_file_list] in setting.csv...
+o_zone_id:413, d_zone_id: 478, value = 5115.864258
+o_zone_id:767, d_zone_id: 177, value = 2574.792725
+o_zone_id:141, d_zone_id: 177, value = 3994.461426
+o_zone_id:413, d_zone_id: 254, value = 4619.155762
+o_zone_id:413, d_zone_id: 323, value = 4141.470703
+total_demand_volume is 20445.746094
+
+Step 2: Assigning computing tasks to memory blocks...
+There are 4 networks in memory.
+
+Step 3: Column Generation for Traffic Assignment...
+Total Column Generation iteration: 1
+
+Current iteration number:0
+Current CPU time: 0.010000 s
+
+Step 4: Column Pool Updating
+Total Column Pool Updating iteration: 0
+
+Done!
+CPU Running Time for column pool updating: 0.002000 s
+writing link_performance.csv..
+writing agent.csv..
+writing data for 12  zones 
+Output for assignment with 1 iterations. Traffic assignment completes!
+CPU Running Time for outputting simulation results: 0.272000 s
+free memory..
+done.

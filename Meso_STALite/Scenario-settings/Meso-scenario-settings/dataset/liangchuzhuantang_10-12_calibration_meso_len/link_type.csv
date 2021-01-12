@@ -1,0 +1,12 @@
+link_type,link_type_name,agent_type_list,type_code
+41000,Highway/Expressway,,
+42000,StateRoad,,
+43000,UrbanExpressway,,
+44000,UrbanArterialRoad,,
+45000,UrbanSecondaryRoad,,
+47000,CityRoad,,
+51000,ProvincialRoad,,
+52000,CountyRoad,,
+53000,TownshipRoad,,
+54000,CountyCountryRoad,,
+49,Path,,
