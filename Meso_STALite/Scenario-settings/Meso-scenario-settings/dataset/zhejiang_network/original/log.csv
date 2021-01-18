@@ -1,0 +1,25 @@
+STALite Log           
+Step 1: Reading input data
+Step 1.1: Reading section [demand_period] in setting.csv...
+number of demand periods = 24
+Step 1.2: Reading section [link_type] in setting.csv...
+important: traffic_flow_code on link type 41000 is 3
+important: traffic_flow_code on link type 42000 is 2
+important: traffic_flow_code on link type 43000 is 3
+important: traffic_flow_code on link type 44000 is 2
+important: traffic_flow_code on link type 45000 is 1
+important: traffic_flow_code on link type 47000 is 1
+important: traffic_flow_code on link type 51000 is 1
+important: traffic_flow_code on link type 52000 is 1
+important: traffic_flow_code on link type 53000 is 1
+important: traffic_flow_code on link type 54000 is 1
+important: traffic_flow_code on link type 49 is 1
+number of link types = 12
+Step 1.3: Reading section [agent_type] in setting.csv...
+number of agent typess = 1
+Step 1.4: Reading node data in node.csv...
+reading 5000 nodes.. 
+number of nodes = 5634
+Step 1.5: Initializing O-D zone vector...
+number of zones = 56
+Step 1.6: Reading link data in link.csv... 
