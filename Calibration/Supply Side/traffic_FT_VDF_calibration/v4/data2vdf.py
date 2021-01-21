@@ -535,13 +535,14 @@ if __name__ == "__main__":
                 period_mean_density = daily_link_training_set['density'].mean()
 
                 # We need to resort the dataframe if assignment period is like 2000_0600
-                daily_link_training_set[['start_time', 'end_time']] = \
-                    (daily_link_training_set['assignment_period'].str.split('_', expand=True))
-                daily_link_training_set[['start_time_each', 'end_time_each']] = \
-                    (daily_link_training_set['time_period'].str.split('_', expand=True))
-                daily_link_training_set['start_time0'] = (daily_link_training_set['start_time'].str[0:2]).astype(int)
-                daily_link_training_set['end_time0'] = (daily_link_training_set['end_time'].str[0:2]).astype(int)
                 try:
+                    daily_link_training_set[['start_time', 'end_time']] = \
+                        (daily_link_training_set['assignment_period'].str.split('_', expand=True))
+                    daily_link_training_set[['start_time_each', 'end_time_each']] = \
+                        (daily_link_training_set['time_period'].str.split('_', expand=True))
+                    daily_link_training_set['start_time0'] = \
+                        (daily_link_training_set['start_time'].str[0:2]).astype(int)
+                    daily_link_training_set['end_time0'] = (daily_link_training_set['end_time'].str[0:2]).astype(int)
                     if list(daily_link_training_set['start_time0'])[0] > list(daily_link_training_set['end_time0'])[0]:
                         start_index = daily_link_training_set[daily_link_training_set['start_time_each'] ==
                                                               daily_link_training_set['start_time']].index[0]
@@ -554,6 +555,7 @@ if __name__ == "__main__":
                 except:
                     daily_link_training_set = daily_link_training_set
                 period_vdf_training_set_reorder = period_vdf_training_set_reorder.append(daily_link_training_set)
+
                 volume_per_lane_series = daily_link_training_set.volume_per_lane.to_list()
                 speed_series = daily_link_training_set.speed.to_list()
                 hourly_volume_per_lane_series = daily_link_training_set.hourly_volume_per_lane.to_list()  # --> hourly_volume_per_lane
