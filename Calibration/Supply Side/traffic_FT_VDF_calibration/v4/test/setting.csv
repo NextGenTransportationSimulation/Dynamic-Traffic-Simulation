@@ -1,0 +1,3 @@
+key,value,description, options
+DOC_RATIO_METHOD,QBM, The method to calculate the demand over capacity (DOC) measures for BPR function calibration, Volume-based method (VBM) Density-based method (DBM) Queue-based method (QBM)
+PHF_METHOD,SBM, The method to calculate the peak hour factor (PHF), speed-based method (SBM) and volume-based method (VBM)
