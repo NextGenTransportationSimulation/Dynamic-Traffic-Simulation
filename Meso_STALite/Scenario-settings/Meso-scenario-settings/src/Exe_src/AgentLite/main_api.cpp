@@ -4769,7 +4769,7 @@ void g_output_simulation_result(Assignment& assignment)
 						float physical_queue = g_link_vector[l].VDF_period[tau].Queue[tt] /(1- V_mu_over_V_f_ratio);  // per lane
 						float density = g_link_vector[l].VDF_period[tau].discharge_rate[tt] / max(0.001, speed);
 					
-						if (tt < t0 || tt > t3) {
+						if (tt < g_link_vector[l].VDF_period[tau].t0 || tt > g_link_vector[l].VDF_period[tau].t3) {
 							// when tt is not in congestion period t0-t3, the density = hourly volume/speed based on fundmental disgram k=q/v
 							density = g_link_vector[l].flow_volume_per_period[tau]/((t_end-t_start)* MIN_PER_TIMESLOT/60.0)/speed;
 						}
