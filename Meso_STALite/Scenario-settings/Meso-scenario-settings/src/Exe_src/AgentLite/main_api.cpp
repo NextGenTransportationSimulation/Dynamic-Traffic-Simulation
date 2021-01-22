@@ -4755,8 +4755,11 @@ void g_output_simulation_result(Assignment& assignment)
 					if (g_link_vector[l].VDF_period[tau].t0 == g_link_vector[l].VDF_period[tau].t3 || g_link_vector[l].VDF_period[tau].bValidQueueData==false)
 						continue; //skip the printout for the nonqueued link or invalid queue data
 
-					int start_time_slot_no = max(g_link_vector[l].VDF_period[tau].starting_time_slot_no, g_link_vector[l].VDF_period[tau].t0);
-					int end_time_slot_no = min(g_link_vector[l].VDF_period[tau].ending_time_slot_no, g_link_vector[l].VDF_period[tau].t3);
+
+					int t_start = g_link_vector[l].VDF_period[tau].starting_time_slot_no;
+					int t_end = g_link_vector[l].VDF_period[tau].ending_time_slot_no;
+					int start_time_slot_no = min(t_start, g_link_vector[l].VDF_period[tau].t0);
+					int end_time_slot_no = max(t_end, g_link_vector[l].VDF_period[tau].t3);
 					for (int tt = start_time_slot_no; tt < end_time_slot_no; tt++)  //tt here is absolute time index
 					{
 						int time = tt* MIN_PER_TIMESLOT;  // 15 min per interval
@@ -4765,9 +4768,15 @@ void g_output_simulation_result(Assignment& assignment)
 						float V_mu_over_V_f_ratio = 0.5; // to be calibrated. 
 						float physical_queue = g_link_vector[l].VDF_period[tau].Queue[tt] /(1- V_mu_over_V_f_ratio);  // per lane
 						float density = g_link_vector[l].VDF_period[tau].discharge_rate[tt] / max(0.001, speed);
+					
+						if (tt < t0 || tt > t3) {
+							// when tt is not in congestion period t0-t3, the density = hourly volume/speed based on fundmental disgram k=q/v
+							density = g_link_vector[l].flow_volume_per_period[tau]/((t_end-t_start)* MIN_PER_TIMESLOT/60.0)/speed;
+						}
+
 						if (density > 150)  // 150 as kjam.
 							density = 150;
-
+							
 						fprintf(g_pFileLinkMOE, "%s,%d,%d,%s_%s,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,\"%s\",",
 							g_link_vector[l].link_id.c_str(),
 							g_node_vector[g_link_vector[l].from_node_seq_no].node_id,
