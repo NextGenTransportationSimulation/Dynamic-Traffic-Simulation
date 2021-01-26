@@ -1392,10 +1392,16 @@ public:
 			{
 				int time_abs = starting_time_slot_no + tt_relative;  //absolute time index
 				if (time_abs < t0)
-				{  //first uncongested phase with mu/2 as the approximate flow rates
+				{  // first uncongested phase with mu/2 as the approximate flow rates
+					// perviously used mu/2 to approximate flow rate, 
+					// now calculate it volume_per_slot (new discharge rate) = (period_volume - P * mu)/(L - P)
+					// where P is congestion period 
+					// and volume_per_slot should between 0 and mu
 					waiting_time[time_abs] = 0;  // per hour
 					arrival_rate[time_abs] = mu / 2;
-					discharge_rate[time_abs] = mu / 2.0;
+					int volume_per_slot = max(0.1, (volume - P * mu) / (L - P)); // the unit is volume per hour 
+					volume_per_slot = min(volume_per_slot, mu);
+					discharge_rate[time_abs] = volume_per_slot; // volume per hour per lane
 					travel_time[time_abs] = FFTT_in_hour;  // per hour
 
 				}
@@ -1419,7 +1425,9 @@ public:
 					//third uncongested phase with mu/2 as the approximate flow rates
 					waiting_time[time_abs] = 0;
 					arrival_rate[time_abs] = mu / 2;
-					discharge_rate[time_abs] = mu / 2.0;
+					int volume_per_slot = max(0.1, (volume - P * mu) / (L - P)); // the unit is volume per hour 
+					volume_per_slot = min(volume_per_slot, mu);
+					discharge_rate[time_abs] = volume_per_slot; // volume per hour per lane
 					travel_time[time_abs] = FFTT_in_hour;
 				}
 	//			avg_waiting_time = gamma / (120 * mu)*pow(P, 4.0) *60.0;// avg_waiting_time  should be per min 
@@ -4146,7 +4154,7 @@ void g_reload_service_arc_data(Assignment& assignment)
 					g_service_arc_vector.push_back(service_arc);
 					assignment.g_number_of_timing_arcs++;
 
-						log_out << "reading " << assignment.g_number_of_timing_arcs << " capacity reduction scenario.. " << endl;
+					log_out << "reading " << assignment.g_number_of_timing_arcs << " capacity reduction scenario.. " << endl;
 
 				}
 			}
@@ -4755,12 +4763,12 @@ void g_output_simulation_result(Assignment& assignment)
 					if (g_link_vector[l].VDF_period[tau].t0 == g_link_vector[l].VDF_period[tau].t3 || g_link_vector[l].VDF_period[tau].bValidQueueData==false)
 						continue; //skip the printout for the nonqueued link or invalid queue data
 
-
 					int t_start = g_link_vector[l].VDF_period[tau].starting_time_slot_no;
 					int t_end = g_link_vector[l].VDF_period[tau].ending_time_slot_no;
 					int start_time_slot_no = min(t_start, g_link_vector[l].VDF_period[tau].t0);
 					int end_time_slot_no = max(t_end, g_link_vector[l].VDF_period[tau].t3);
 					for (int tt = start_time_slot_no; tt < end_time_slot_no; tt++)  //tt here is absolute time index
+
 					{
 						int time = tt* MIN_PER_TIMESLOT;  // 15 min per interval
 
