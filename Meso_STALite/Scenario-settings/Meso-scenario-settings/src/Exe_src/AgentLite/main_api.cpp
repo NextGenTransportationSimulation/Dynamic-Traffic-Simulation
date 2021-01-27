@@ -1343,7 +1343,7 @@ public:
 	}
 
 	
-	float PerformBPR_X(float volume)
+	float PerformBPR_X(float volume, int number_of_lanes)
 	{
 		bValidQueueData = false;
 
@@ -1381,11 +1381,13 @@ public:
 			//if (volume > L * mu / 2 ) // Case 2
 
 			float P = 0;
-			congestion_period_P = volume / PHF / mu;  // unit: hour  // volume / PHF  is D, D/mu = congestion period
+			congestion_period_P = volume / PHF / mu / number_of_lanes;  // unit: hour  // volume / PHF  is D, D/mu = congestion period
 			P = congestion_period_P * 4; //unit: 15 time slot
 
 			t0 = max(0, mid_time_slot_no - P / 2.0);
+			t0 = max(starting_time_slot_no, t0);
 			t3 = min(_MAX_TIMESLOT_PerPeriod-1, mid_time_slot_no + P / 2.0);
+			t3 = min(ending_time_slot_no, t3);
 			// derive t0 and t3 based on congestion duration p
 			int t2 = m * (t3 - t0) + t0;
 			for (int tt_relative = 0; tt_relative <= L; tt_relative++)  //tt_relative is relative time
@@ -1394,14 +1396,15 @@ public:
 				if (time_abs < t0)
 				{  // first uncongested phase with mu/2 as the approximate flow rates
 					// perviously used mu/2 to approximate flow rate, 
-					// now calculate it volume_per_slot (new discharge rate) = (period_volume - P * mu)/(L - P)
+					// now calculate it volume_per_hour (new discharge rate) = (period_volume - P * mu)/(L - P)
 					// where P is congestion period 
-					// and volume_per_slot should between 0 and mu
+					// and volume_per_hour should between 0 and mu
 					waiting_time[time_abs] = 0;  // per hour
 					arrival_rate[time_abs] = mu / 2;
-					int volume_per_slot = max(0.1, (volume - P * mu) / (L - P)); // the unit is volume per hour 
-					volume_per_slot = min(volume_per_slot, mu);
-					discharge_rate[time_abs] = volume_per_slot; // volume per hour per lane
+					int t0_t3 = t3 - t0;
+					int volume_per_hour = max(0.1, (volume - t0_t3/4.0 * mu * number_of_lanes) / (L - t0_t3)); // the unit is volume per hour 
+					volume_per_hour = min(volume_per_hour, mu);
+					discharge_rate[time_abs] = volume_per_hour; // volume per hour per lane
 					travel_time[time_abs] = FFTT_in_hour;  // per hour
 
 				}
@@ -1424,10 +1427,10 @@ public:
 				{
 					//third uncongested phase with mu/2 as the approximate flow rates
 					waiting_time[time_abs] = 0;
-					arrival_rate[time_abs] = mu / 2;
-					int volume_per_slot = max(0.1, (volume - P * mu) / (L - P)); // the unit is volume per hour 
-					volume_per_slot = min(volume_per_slot, mu);
-					discharge_rate[time_abs] = volume_per_slot; // volume per hour per lane
+					int t0_t3 = t3 - t0;
+					int volume_per_hour = max(0.1, (volume - t0_t3 / 4.0 * mu * number_of_lanes) / (L - t0_t3)); // the unit is volume per hour 
+					volume_per_hour = min(volume_per_hour, mu);
+					discharge_rate[time_abs] = volume_per_hour; // volume per hour per lane
 					travel_time[time_abs] = FFTT_in_hour;
 				}
 	//			avg_waiting_time = gamma / (120 * mu)*pow(P, 4.0) *60.0;// avg_waiting_time  should be per min 
@@ -4731,6 +4734,8 @@ void g_output_simulation_result(Assignment& assignment)
 			{
 				if (g_link_vector[l].link_type == -1)  // virtual connectors
 					continue;
+//				if (g_link_vector[l].link_seq_no == 960)
+//					int i = 960;
 
 				for (int tau = 0; tau < assignment.g_number_of_demand_periods; tau++)
 				{
@@ -4790,7 +4795,7 @@ void g_output_simulation_result(Assignment& assignment)
 							g_node_vector[g_link_vector[l].from_node_seq_no].node_id,
 							g_node_vector[g_link_vector[l].to_node_seq_no].node_id,
 							g_time_coding(time).c_str(), g_time_coding(time+ MIN_PER_TIMESLOT).c_str(),
-							g_link_vector[l].VDF_period[tau].discharge_rate[tt],
+							g_link_vector[l].VDF_period[tau].discharge_rate[tt] * g_link_vector[l].number_of_lanes/4.0,
 							g_link_vector[l].VDF_period[tau].travel_time[tt]*60,  /*convert per hour to min*/
 							speed,
 							g_link_vector[l].VDF_period[tau].VOC,
@@ -5712,19 +5717,17 @@ void  CLink::CalculateTD_VDFunction()
 
 		}
 
-			if (this->movement_str.length() == 0 /*non signalized*/||  
-				(this->movement_str.length() > 1 && /*signalized*/
-					VDF_period[tau].red_time < 1 &&
-					VDF_period[tau].cycle_length < 30)
-				)
+		if (this->movement_str.length() == 0 /*non signalized*/||  
+			(this->movement_str.length() > 1 && /*signalized*/
+				VDF_period[tau].red_time < 1 &&
+				VDF_period[tau].cycle_length < 30)
+			)
 		
-			{ 
-				travel_time_per_period[tau] = VDF_period[tau].PerformBPR(flow_volume_per_period[tau]);
-				VDF_period[tau].PerformBPR_X(flow_volume_per_period[tau]);  // only for freeway segments
-			}
+		{ 
+			travel_time_per_period[tau] = VDF_period[tau].PerformBPR(flow_volume_per_period[tau]);
+			VDF_period[tau].PerformBPR_X(flow_volume_per_period[tau], number_of_lanes);  // only for freeway segments
+		}
 			
-
-
 	}
 }
 
