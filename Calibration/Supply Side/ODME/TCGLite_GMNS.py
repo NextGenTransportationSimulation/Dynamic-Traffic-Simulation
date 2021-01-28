@@ -10,7 +10,9 @@ import pandas as pd
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.max_rows', 500)
 pd.options.mode.chained_assignment = None  # Do not show the copy warning
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+
+tf.disable_v2_behavior()
 import matplotlib.pyplot as plt
 import datetime
 
@@ -22,15 +24,13 @@ from keras import backend as K
 NUM_PARALLEL_EXEC_UNITS = 8
 
 inputLocation = "SiouxFalls network/"
-outputLocation = "SiouxFalls network/"+"TCGLite/"
+outputLocation = "SiouxFalls network/" + "TCGLite/"
 picLocation = inputLocation + "pictures/"
-
 
 config = tf.ConfigProto(intra_op_parallelism_threads=NUM_PARALLEL_EXEC_UNITS,
                         inter_op_parallelism_threads=1,
                         allow_soft_placement=True,
                         device_count={'CPU': NUM_PARALLEL_EXEC_UNITS})
-
 
 session = tf.Session(config=config)
 
@@ -86,7 +86,6 @@ def build_optimizer(f_survey, lr_survey, f_mobile, lr_mobile, f_count, lr_count,
     return opt_survey, opt_mobile, opt_count, opt_total
 
 
-
 if __name__ == '__main__':
     # In[1] Input all the samples
     print('----Step 1: Input data----', '\n')
@@ -94,60 +93,57 @@ if __name__ == '__main__':
     all_node_df = pd.read_csv(inputLocation + 'node.csv', encoding='gbk')
     all_link_df = pd.read_csv(inputLocation + 'link.csv', encoding='gbk')
     all_agent_df = pd.read_csv(inputLocation + 'agent.csv', encoding='gbk')
-    agent_type_df=pd.read_csv(inputLocation + 'agent_type.csv', encoding='gbk')
+    agent_type_df = pd.read_csv(inputLocation + 'agent_type.csv', encoding='gbk')
 
     # In[2] Only consider the first sample
     all_agent_df = pd.concat([all_agent_df, pd.DataFrame(columns=['geometry'])])
     ozone_df = all_agent_df[all_agent_df['agent_type'] == 1]
-    ozone_df.rename(columns={'agent_id':'ozone_id','observations': 'trip_generation'}, inplace=True)
+    ozone_df.rename(columns={'agent_id': 'ozone_id', 'observations': 'trip_generation'}, inplace=True)
     ozone_df.reset_index(drop=True, inplace=True)
 
     for i in ozone_df.index:
         # print(ozone_df['o_node_id'].iloc[i])
-        geo=all_node_df.loc[all_node_df['node_id']==int(ozone_df['o_node_id'].iloc[i]),'geometry'].values[0]
-        ozone_df['geometry'].iloc[i]=geo
+        geo = all_node_df.loc[all_node_df['node_id'] == int(ozone_df['o_node_id'].iloc[i]), 'geometry'].values[0]
+        ozone_df['geometry'].iloc[i] = geo
 
     od_df = all_agent_df[all_agent_df['agent_type'] == 2]
-    od_df.rename(columns={'agent_id':'od_id','observations': 'OD_split'}, inplace=True)
+    od_df.rename(columns={'agent_id': 'od_id', 'observations': 'OD_split'}, inplace=True)
     od_df.reset_index(drop=True, inplace=True)
     '''no real sense of od geometry'''
     for i in od_df.index:
-        lon1=all_node_df.loc[all_node_df['node_id']==int(od_df['o_node_id'].iloc[i]),'x_coord'].values[0]
-        lat1=all_node_df.loc[all_node_df['node_id']==int(od_df['o_node_id'].iloc[i]),'y_coord'].values[0]
-        lon2=all_node_df.loc[all_node_df['node_id']==int(od_df['d_node_id'].iloc[i]),'x_coord'].values[0]
-        lat2=all_node_df.loc[all_node_df['node_id']==int(od_df['d_node_id'].iloc[i]),'y_coord'].values[0]
-        od_df['geometry'].iloc[i]='LINESTRING ( '+str(lon1)+' '+str(lat1)+','+str(lon2)+' '+str(lat2)+')'
+        lon1 = all_node_df.loc[all_node_df['node_id'] == int(od_df['o_node_id'].iloc[i]), 'x_coord'].values[0]
+        lat1 = all_node_df.loc[all_node_df['node_id'] == int(od_df['o_node_id'].iloc[i]), 'y_coord'].values[0]
+        lon2 = all_node_df.loc[all_node_df['node_id'] == int(od_df['d_node_id'].iloc[i]), 'x_coord'].values[0]
+        lat2 = all_node_df.loc[all_node_df['node_id'] == int(od_df['d_node_id'].iloc[i]), 'y_coord'].values[0]
+        od_df['geometry'].iloc[i] = 'LINESTRING ( ' + str(lon1) + ' ' + str(lat1) + ',' + str(lon2) + ' ' + str(
+            lat2) + ')'
 
     path_df = all_agent_df[all_agent_df['agent_type'] == 3]
-    path_df.rename(columns={'agent_id':'path_id','observations': 'path_proportion'}, inplace=True)
+    path_df.rename(columns={'agent_id': 'path_id', 'observations': 'path_proportion'}, inplace=True)
     path_df.reset_index(drop=True, inplace=True)
 
     for i in path_df.index:
-        path_sequence=path_df['node_sequence'].iloc[i]
-        path_sequence_list=path_sequence.split('; ')
-        for j in range(0,len(path_sequence_list)):
-            point_j=int(path_sequence_list[j])
+        path_sequence = path_df['node_sequence'].iloc[i]
+        path_sequence_list = path_sequence.split('; ')
+        for j in range(0, len(path_sequence_list)):
+            point_j = int(path_sequence_list[j])
             lon1 = all_node_df.loc[all_node_df['node_id'] == point_j, 'x_coord'].values[0]
             lat1 = all_node_df.loc[all_node_df['node_id'] == point_j, 'y_coord'].values[0]
-            if j==0:
-                geo='LINESTRING ( '+str(lon1)+' '+str(lat1)
+            if j == 0:
+                geo = 'LINESTRING ( ' + str(lon1) + ' ' + str(lat1)
             else:
-                geo=geo+','+str(lon1)+' '+str(lat1)
-        geometry=geo+' )'
-        path_df['geometry'].iloc[i]=geometry
-
+                geo = geo + ',' + str(lon1) + ' ' + str(lat1)
+        geometry = geo + ' )'
+        path_df['geometry'].iloc[i] = geometry
 
     link_df = all_agent_df[all_agent_df['agent_type'] == 4]
-    link_df.rename(columns={'agent_id':'link_id','observations': 'sensor_count'}, inplace=True)
+    link_df.rename(columns={'agent_id': 'link_id', 'observations': 'sensor_count'}, inplace=True)
     link_df.reset_index(drop=True, inplace=True)
     for i in link_df.index:
-        geo=all_link_df.loc[all_link_df['link_id']==int(link_df['link_id'].iloc[i]),'geometry'].values[0]
-        link_df['geometry'].iloc[i]=geo
-
+        geo = all_link_df.loc[all_link_df['link_id'] == int(link_df['link_id'].iloc[i]), 'geometry'].values[0]
+        link_df['geometry'].iloc[i] = geo
 
     link_with_sensor_df = link_df[link_df['sensor_count'] >= 0]
-
-
 
     # In[3] Basic parameters
     num_survey = 1
@@ -169,7 +165,8 @@ if __name__ == '__main__':
     print('----Step 2: Build up Hash tables----', '\n')
     t0 = datetime.datetime.now()
     print('Dictionary on link layer...')
-    link_df['link_pair'] = link_df.apply(lambda x: (int(x.o_node_id), int(x.d_node_id)), axis=1)  # map each link records to the internal data
+    link_df['link_pair'] = link_df.apply(lambda x: (int(x.o_node_id), int(x.d_node_id)),
+                                         axis=1)  # map each link records to the internal data
     link_id_pair_dict = link_df[['link_id', 'link_pair']].set_index('link_pair').to_dict()['link_id']
 
     print('Dictionary on ozone layer...')
@@ -200,8 +197,8 @@ if __name__ == '__main__':
 
     sensor_val = np.zeros(shape=[num_sensor, num_link])
     for s in range(num_sensor):
-        print(s,link_df)
-        sensor_val[s] = link_df[link_df['time_peroid']== s+1].sensor_count
+        print(s, link_df)
+        sensor_val[s] = link_df[link_df['time_peroid'] == s + 1].sensor_count
         print(sensor_val)
 
     mobile_val = np.zeros(shape=[num_mobile, num_ozone, num_od])
@@ -210,7 +207,7 @@ if __name__ == '__main__':
         for i in range(num_od):
             od_w = od_df.loc[i]
             print(od_w)
-            temp_matrix[int(od_w.ozone_id - 1)][int(od_w.od_id-1)] = od_w.OD_split
+            temp_matrix[int(od_w.ozone_id - 1)][int(od_w.od_id - 1)] = od_w.OD_split
         mobile_val[m] = temp_matrix
 
     print('Build up Placeholders...')
@@ -252,7 +249,7 @@ if __name__ == '__main__':
         ozone_id = od_ozone_dict[od_id]
         ozone_od_inc_mat[int(ozone_id - 1)][int(od_id - 1)] = 1.0
 
-    #Filter sensor >0,and normalization
+    # Filter sensor >0,and normalization
     sensor_mat = np.array(link_df.sensor_count >= 0).astype(float)
     sensor_mat = sensor_mat / np.sum(sensor_mat)
     print(sensor_mat)
@@ -266,15 +263,15 @@ if __name__ == '__main__':
     est_alpha = tf.nn.relu(est_alpha)
     est_gamma = init_variable([num_ozone, num_od], 1, 'gamma_')
     est_gamma = tf.nn.relu(est_gamma)
-    alpha_1=tf.constant(1, shape=[1, num_ozone],dtype=tf.float64)
+    alpha_1 = tf.constant(1, shape=[1, num_ozone], dtype=tf.float64)
     est_q = connection(est_alpha, est_gamma, ozone_od_inc_mat)
-    est_gamma1=connection(alpha_1, est_gamma, ozone_od_inc_mat)
+    est_gamma1 = connection(alpha_1, est_gamma, ozone_od_inc_mat)
     print('Create layer from od to path...')
     est_rou = init_variable([num_od, num_path], 1, 'rou_')
     est_rou = tf.nn.relu(est_rou)
-    q_1=tf.constant(1, shape=[1, num_od],dtype=tf.float64)
+    q_1 = tf.constant(1, shape=[1, num_od], dtype=tf.float64)
     est_f = connection(est_q, est_rou, od_path_inc_mat)  # q*rou
-    est_rou1=connection(q_1, est_rou, od_path_inc_mat)
+    est_rou1 = connection(q_1, est_rou, od_path_inc_mat)
     print('Create layer from path to link...')
     est_v = tf.nn.relu(tf.matmul(est_f, path_link_inc_mat))
 
@@ -329,7 +326,7 @@ if __name__ == '__main__':
             train_mobile, _ = sess.run([f_mobile, opt_mobile], feed_dict=feed)
             train_sensor, _ = sess.run([f_count, opt_count], feed_dict=feed)
 
-            #train_total = (train_survey + train_mobile + train_sensor) / 3
+            # train_total = (train_survey + train_mobile + train_sensor) / 3
 
             list_survey.append(train_survey)
             list_mobile.append(train_mobile)
@@ -354,16 +351,16 @@ if __name__ == '__main__':
     print('\n', 'CPU time:', tt1 - tt0, '\n')
     ##output the estimation results and loss
     ##save the estimation result of ozone,od,path,link layer
-    #ozone
+    # ozone
     df_dict = {'ozone_id': ozone_df['ozone_id'].values.tolist(),
                'node_id': ozone_df['o_node_id'].values.tolist(),
-               'geometry':ozone_df['geometry'].values.tolist(),
+               'geometry': ozone_df['geometry'].values.tolist(),
                'estimated_alpha': output_ozone_generation.flatten().tolist(),
                'target_alpha': ozone_df['trip_generation'].values.tolist()}
     df = pd.DataFrame(df_dict)
-    df = df[['ozone_id','node_id','geometry', 'estimated_alpha', 'target_alpha']]
+    df = df[['ozone_id', 'node_id', 'geometry', 'estimated_alpha', 'target_alpha']]
     df.to_csv(outputLocation + 'output_zone_alpha.csv', index=None)
-    #od
+    # od
 
     df_dict = {'od_id': od_df['od_id'].values.tolist(),
                'o_zone_id': od_df['o_zone_id'].values.tolist(),
@@ -375,22 +372,25 @@ if __name__ == '__main__':
                'target_flow': od_df['od_flow'].values.tolist()
                }
     df = pd.DataFrame(df_dict)
-    df = df[['od_id','o_zone_id', 'd_zone_id','geometry', 'estimated_gamma', 'target_gamma','estimated_flow','target_flow']]
+    df = df[['od_id', 'o_zone_id', 'd_zone_id', 'geometry', 'estimated_gamma', 'target_gamma', 'estimated_flow',
+             'target_flow']]
     df.to_csv(outputLocation + 'output_od_gamma.csv', index=None)
-    #path
+    # path
     df_dict = {'path_id': path_df['path_id'].values.tolist(),
                'o_zone_id': path_df['o_zone_id'].values.tolist(),
                'd_zone_id': path_df['d_zone_id'].values.tolist(),
                'geometry': path_df['geometry'].values.tolist(),
                'node_sequence': path_df['node_sequence'].values.tolist(),
                'estimated_proportion': output_path_proportion.flatten().tolist(),
-               'target_proportion':path_df['path_proportion'].values.tolist(),
-               'estimated_flow':output_path_flow.flatten().tolist(),
-               'target_flow':path_df['path_flow'].values.tolist()}
+               'target_proportion': path_df['path_proportion'].values.tolist(),
+               'estimated_flow': output_path_flow.flatten().tolist(),
+               'target_flow': path_df['path_flow'].values.tolist()}
     df = pd.DataFrame(df_dict)
-    df = df[['path_id','o_zone_id', 'd_zone_id', 'geometry', 'estimated_proportion', 'target_proportion','estimated_flow','target_flow']]
+    df = df[
+        ['path_id', 'o_zone_id', 'd_zone_id', 'geometry', 'estimated_proportion', 'target_proportion', 'estimated_flow',
+         'target_flow']]
     df.to_csv(outputLocation + 'output_path_proportion.csv', index=None)
-    #link
+    # link
     df_dict = {'link_id': link_df['link_id'].values.tolist(),
                'o_node_id': link_df['o_node_id'].values.tolist(),
                'd_node_id': link_df['d_node_id'].values.tolist(),
@@ -398,13 +398,13 @@ if __name__ == '__main__':
                'estimated_count': output_link_flow.flatten().tolist(),
                'target_count': link_df['sensor_count'].values.tolist()}
     df = pd.DataFrame(df_dict)
-    df = df[['link_id', 'o_node_id', 'd_node_id','geometry', 'estimated_count', 'target_count']]
+    df = df[['link_id', 'o_node_id', 'd_node_id', 'geometry', 'estimated_count', 'target_count']]
     df.to_csv(outputLocation + 'output_link_count.csv', index=None)
 
-
     ##loss
-    dataframe = pd.DataFrame({'loss_total': list_total, 'loss_survey': list_survey, 'loss_mobile': list_mobile, 'loss_sensor': list_sensor})
-    dataframe.to_csv(outputLocation+"output_loss.csv", index=True)
+    dataframe = pd.DataFrame(
+        {'loss_total': list_total, 'loss_survey': list_survey, 'loss_mobile': list_mobile, 'loss_sensor': list_sensor})
+    dataframe.to_csv(outputLocation + "output_loss.csv", index=True)
 
     import matplotlib
     import matplotlib.pyplot as plt
@@ -423,4 +423,3 @@ if __name__ == '__main__':
         # plt.grid()
     plt.savefig(picLocation + 'loss-TCGLite.png', dpi=300, format='png')
     plt.show()
-
