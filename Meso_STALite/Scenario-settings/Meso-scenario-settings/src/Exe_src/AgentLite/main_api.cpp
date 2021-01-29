@@ -53,7 +53,7 @@ template <typename T>
 #define _default_saturation_flow_rate 1530 
 
 #define MIN_PER_TIMESLOT 15
-#define MIN_CONGESTED_TIMESLOT 4
+#define MIN_CONGESTED_TIMESLOT 1
 
 /* make sure we change the following two parameters together*/
 /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
@@ -1250,8 +1250,8 @@ public:
 		cycle_length = 29;  //default value
 		red_time = 0;
 
-		t0 = 0;
-		t3 = 0;
+		t0 = -1;
+		t3 = -1;
 	}
 
 
@@ -4801,15 +4801,16 @@ void g_output_simulation_result(Assignment& assignment)
 
 					// print out for BPR-X 
 
-					if (g_link_vector[l].VDF_period[tau].t0 == g_link_vector[l].VDF_period[tau].t3 || g_link_vector[l].VDF_period[tau].bValidQueueData==false)
-						continue; //skip the printout for the nonqueued link or invalid queue data
+					//if (g_link_vector[l].VDF_period[tau].t0 == g_link_vector[l].VDF_period[tau].t3 || g_link_vector[l].VDF_period[tau].bValidQueueData==false)
+					//	continue; //skip the printout for the nonqueued link or invalid queue data
+					int t0 = g_link_vector[l].VDF_period[tau].t0;
+					int t3 = g_link_vector[l].VDF_period[tau].t3;
 
 					int t_start = g_link_vector[l].VDF_period[tau].starting_time_slot_no;
 					int t_end = g_link_vector[l].VDF_period[tau].ending_time_slot_no;
-					int start_time_slot_no = min(t_start, g_link_vector[l].VDF_period[tau].t0);
-					int end_time_slot_no = max(t_end, g_link_vector[l].VDF_period[tau].t3);
-					for (int tt = start_time_slot_no; tt < end_time_slot_no; tt++)  //tt here is absolute time index
-
+					//int start_time_slot_no = min(t_start, t0);
+					//int end_time_slot_no = max(t_end, t3);
+					for (int tt = t_start; tt < t_end; tt++)  //tt here is absolute time index
 					{
 						int time = tt* MIN_PER_TIMESLOT;  // 15 min per interval
 
@@ -4817,10 +4818,17 @@ void g_output_simulation_result(Assignment& assignment)
 						float V_mu_over_V_f_ratio = 0.5; // to be calibrated. 
 						float physical_queue = g_link_vector[l].VDF_period[tau].Queue[tt] /(1- V_mu_over_V_f_ratio);  // per lane
 						float density = g_link_vector[l].VDF_period[tau].discharge_rate[tt] / max(0.001, speed);
-					
-						if (tt < g_link_vector[l].VDF_period[tau].t0 || tt > g_link_vector[l].VDF_period[tau].t3) {
+						float volume = g_link_vector[l].VDF_period[tau].discharge_rate[tt] * g_link_vector[l].number_of_lanes / (60/ MIN_PER_TIMESLOT);
+
+						//if (g_link_vector[l].flow_volume_per_period[tau] != 0) {
+						//	int vol = 1;
+						//}
+
+						if (t0 == -1 || t3 == -1 || tt < t0 || tt > t3) {
 							// when tt is not in congestion period t0-t3, the density = hourly volume/speed based on fundmental disgram k=q/v
 							density = (g_link_vector[l].flow_volume_per_period[tau]/((t_end-t_start)* MIN_PER_TIMESLOT/60.0))/speed;
+							volume = g_link_vector[l].flow_volume_per_period[tau] / (t_end - t_start);
+
 						}
 
 						if (density > 150)  // 150 as kjam.
@@ -4831,7 +4839,7 @@ void g_output_simulation_result(Assignment& assignment)
 							g_node_vector[g_link_vector[l].from_node_seq_no].node_id,
 							g_node_vector[g_link_vector[l].to_node_seq_no].node_id,
 							g_time_coding(time).c_str(), g_time_coding(time+ MIN_PER_TIMESLOT).c_str(),
-							g_link_vector[l].VDF_period[tau].discharge_rate[tt] * g_link_vector[l].number_of_lanes/4.0,
+							volume, // volume per time slot
 							g_link_vector[l].VDF_period[tau].travel_time[tt]*60,  /*convert per hour to min*/
 							speed,
 							g_link_vector[l].VDF_period[tau].VOC,
@@ -5761,6 +5769,7 @@ void  CLink::CalculateTD_VDFunction()
 		
 		{ 
 			travel_time_per_period[tau] = VDF_period[tau].PerformBPR(flow_volume_per_period[tau]);
+
 			VDF_period[tau].PerformBPR_X(flow_volume_per_period[tau], number_of_lanes, VDF_period[tau].avg_travel_time);  // only for freeway segments
 		}
 			
