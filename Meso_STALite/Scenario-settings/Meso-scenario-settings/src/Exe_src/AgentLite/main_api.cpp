@@ -1802,14 +1802,14 @@ public:
 		m_value_of_time = 10;
 		m_memory_block_no = 0;
 		bBuildNetwork = false;
-		temp_path_node_vector_size = 1000;
+		temp_path_node_vector_size = 10000;
 		
 
 	}
 
 	int temp_path_node_vector_size;
-	int temp_path_node_vector[1000]; //node seq vector for each ODK
-	int temp_path_link_vector[1000]; //node seq vector for each ODK
+	int temp_path_node_vector[10000]; //node seq vector for each ODK
+	int temp_path_link_vector[10000]; //node seq vector for each ODK
 
 	int m_memory_block_no;
 
@@ -4775,7 +4775,7 @@ void g_output_simulation_result(Assignment& assignment)
 
 				for (int tau = 0; tau < assignment.g_number_of_demand_periods; tau++)
 				{
-					float speed = g_link_vector[l].length / (max(0.001, g_link_vector[l].VDF_period[tau].avg_travel_time) / 60.0);
+					float speed = g_link_vector[l].length / (max(0.00001, g_link_vector[l].VDF_period[tau].avg_travel_time) / 60.0);
 					fprintf(g_pFileLinkMOE, "%s,%d,%d,%s,%.3f,%.3f,%.3f,%.3f,0,0,\"%s\",",
 						g_link_vector[l].link_id.c_str(),
 
@@ -4814,7 +4814,7 @@ void g_output_simulation_result(Assignment& assignment)
 					{
 						int time = tt* MIN_PER_TIMESLOT;  // 15 min per interval
 
-						float speed = g_link_vector[l].length / (max(0.001, g_link_vector[l].VDF_period[tau].travel_time[tt]));
+						float speed = g_link_vector[l].length / (max(0.00001, g_link_vector[l].VDF_period[tau].travel_time[tt]));
 						float V_mu_over_V_f_ratio = 0.5; // to be calibrated. 
 						float physical_queue = g_link_vector[l].VDF_period[tau].Queue[tt] /(1- V_mu_over_V_f_ratio);  // per lane
 						float density = g_link_vector[l].VDF_period[tau].discharge_rate[tt] / max(0.001, speed);
@@ -4828,7 +4828,8 @@ void g_output_simulation_result(Assignment& assignment)
 							// when tt is not in congestion period t0-t3, the density = hourly volume/speed based on fundmental disgram k=q/v
 							density = (g_link_vector[l].flow_volume_per_period[tau]/((t_end-t_start)* MIN_PER_TIMESLOT/60.0))/speed;
 							volume = g_link_vector[l].flow_volume_per_period[tau] / (t_end - t_start);
-
+							// when not congested use average speed
+							float speed = g_link_vector[l].length / (max(0.00001, g_link_vector[l].VDF_period[tau].avg_travel_time)) * 60;
 						}
 
 						if (density > 150)  // 150 as kjam.
@@ -5297,7 +5298,7 @@ void g_output_simulation_result_for_signal_api(Assignment& assignment)
 					if (g_link_vector[l].movement_str.length() >= 1)
 					{
 
-						float speed = g_link_vector[l].length / (max(0.001, g_link_vector[l].VDF_period[tau].avg_travel_time) / 60.0);
+						float speed = g_link_vector[l].length / (max(0.00001, g_link_vector[l].VDF_period[tau].avg_travel_time) / 60.0);
 						fprintf(g_pFileLinkMOE, "%s,%d,%d,%s,%s,%s,%d,%d,%.3f,%.3f,%.3f,%.3f,",
 							g_link_vector[l].link_id.c_str(),
 
