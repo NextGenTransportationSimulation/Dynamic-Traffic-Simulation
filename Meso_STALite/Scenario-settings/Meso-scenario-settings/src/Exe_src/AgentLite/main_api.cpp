@@ -4377,7 +4377,7 @@ void update_link_travel_time_and_cost()
 				g_link_vector[l].calculate_marginal_cost_for_agent_type(tau, at, PCE_agent_type);
 
 				//if (log_out.debug_level  >= 3 && assignment.assignment_mode >= 2 && assignment.g_pFileDebugLog != NULL)
-				//	fprintf(assignment.g_pFileDebugLog, "Update link cost: link %d->%d: tau = %d, at = %d, travel_marginal =  %.3f\n",
+				//	fprintf(assignment.g_pFileDebugLog, "Update link cost: link %d->%d: tau = %d, at = %d, travel_marginal =  %.5f\n",
 
 				//		g_node_vector[g_link_vector[l].from_node_seq_no].node_id,
 				//		g_node_vector[g_link_vector[l].to_node_seq_no].node_id,
@@ -4776,7 +4776,7 @@ void g_output_simulation_result(Assignment& assignment)
 				for (int tau = 0; tau < assignment.g_number_of_demand_periods; tau++)
 				{
 					float speed = g_link_vector[l].length / (max(0.00001, g_link_vector[l].VDF_period[tau].avg_travel_time) / 60.0);
-					fprintf(g_pFileLinkMOE, "%s,%d,%d,%s,%.3f,%.3f,%.3f,%.3f,0,0,\"%s\",",
+					fprintf(g_pFileLinkMOE, "%s,%d,%d,%s,%.5f,%.5f,%.5f,%.5f,0,0,\"%s\",",
 						g_link_vector[l].link_id.c_str(),
 
 						g_node_vector[g_link_vector[l].from_node_seq_no].node_id,
@@ -4815,10 +4815,13 @@ void g_output_simulation_result(Assignment& assignment)
 						int time = tt* MIN_PER_TIMESLOT;  // 15 min per interval
 
 						float speed = g_link_vector[l].length / (max(0.00001, g_link_vector[l].VDF_period[tau].travel_time[tt]));
+
+
 						float V_mu_over_V_f_ratio = 0.5; // to be calibrated. 
 						float physical_queue = g_link_vector[l].VDF_period[tau].Queue[tt] /(1- V_mu_over_V_f_ratio);  // per lane
 						float density = g_link_vector[l].VDF_period[tau].discharge_rate[tt] / max(0.001, speed);
 						float volume = g_link_vector[l].VDF_period[tau].discharge_rate[tt] * g_link_vector[l].number_of_lanes / (60/ MIN_PER_TIMESLOT);
+						float travel_time = g_link_vector[l].VDF_period[tau].travel_time[tt] * 60;
 
 						//if (g_link_vector[l].flow_volume_per_period[tau] != 0) {
 						//	int vol = 1;
@@ -4829,19 +4832,23 @@ void g_output_simulation_result(Assignment& assignment)
 							density = (g_link_vector[l].flow_volume_per_period[tau]/((t_end-t_start)* MIN_PER_TIMESLOT/60.0))/speed;
 							volume = g_link_vector[l].flow_volume_per_period[tau] / (t_end - t_start);
 							// when not congested use average speed
-							float speed = g_link_vector[l].length / (max(0.00001, g_link_vector[l].VDF_period[tau].avg_travel_time)) * 60;
+							speed = g_link_vector[l].length / (max(0.00001, g_link_vector[l].VDF_period[tau].avg_travel_time)) * 60;
+							travel_time = g_link_vector[l].VDF_period[tau].avg_travel_time;
 						}
 
 						if (density > 150)  // 150 as kjam.
 							density = 150;
-							
-						fprintf(g_pFileLinkMOE, "%s,%d,%d,%s_%s,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,\"%s\",",
+						if (travel_time == 0) {
+							float travel_time = 0;
+						}
+
+						fprintf(g_pFileLinkMOE, "%s,%d,%d,%s_%s,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,\"%s\",",
 							g_link_vector[l].link_id.c_str(),
 							g_node_vector[g_link_vector[l].from_node_seq_no].node_id,
 							g_node_vector[g_link_vector[l].to_node_seq_no].node_id,
 							g_time_coding(time).c_str(), g_time_coding(time+ MIN_PER_TIMESLOT).c_str(),
 							volume, // volume per time slot
-							g_link_vector[l].VDF_period[tau].travel_time[tt]*60,  /*convert per hour to min*/
+							travel_time,  /*convert per hour to min*/
 							speed,
 							g_link_vector[l].VDF_period[tau].VOC,
 							physical_queue,
@@ -4912,7 +4919,7 @@ void g_output_simulation_result(Assignment& assignment)
 
 							float density = (assignment.m_LinkCumulativeArrival[l][t] - assignment.m_LinkCumulativeDeparture[l][t]) / (g_link_vector[l].length * g_link_vector[l].number_of_lanes);
 
-							fprintf(g_pFileLinkMOE, "%s,%d,%d,%s_%s,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,",
+							fprintf(g_pFileLinkMOE, "%s,%d,%d,%s_%s,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,",
 								g_link_vector[l].link_id.c_str(),
 
 								g_node_vector[g_link_vector[l].from_node_seq_no].node_id,
@@ -4953,7 +4960,7 @@ void g_output_simulation_result(Assignment& assignment)
 
 			//			for (int t = 0; t <= ending_time - starting_time; t++)
 			//			{
-			//				fprintf(g_pFileLinkMOE, "%s,%s,%s,%d,%.3f,%.3f,%.3f,%.3f,%s\n",
+			//				fprintf(g_pFileLinkMOE, "%s,%s,%s,%d,%.5f,%.5f,%.5f,%.5f,%s\n",
 
 			//					g_link_vector[l].link_id.c_str(),
 			//					g_node_vector[g_link_vector[l].from_node_seq_no].node_id.c_str(),
@@ -5299,7 +5306,7 @@ void g_output_simulation_result_for_signal_api(Assignment& assignment)
 					{
 
 						float speed = g_link_vector[l].length / (max(0.00001, g_link_vector[l].VDF_period[tau].avg_travel_time) / 60.0);
-						fprintf(g_pFileLinkMOE, "%s,%d,%d,%s,%s,%s,%d,%d,%.3f,%.3f,%.3f,%.3f,",
+						fprintf(g_pFileLinkMOE, "%s,%d,%d,%s,%s,%s,%d,%d,%.5f,%.5f,%.5f,%.5f,",
 							g_link_vector[l].link_id.c_str(),
 
 							g_node_vector[g_link_vector[l].from_node_seq_no].node_id,
@@ -5386,7 +5393,7 @@ void g_output_simulation_result_for_signal_api(Assignment& assignment)
 							speed = g_link_vector[l].length / (max(0.00001, travel_time) / 60.0);
 						}
 
-						fprintf(g_pFileLinkMOE, "%s,%d,%d,%s_%s,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,",
+						fprintf(g_pFileLinkMOE, "%s,%d,%d,%s_%s,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,",
 							g_link_vector[l].link_id.c_str(),
 
 							g_node_vector[g_link_vector[l].from_node_seq_no].node_id,
@@ -5423,7 +5430,7 @@ void g_output_simulation_result_for_signal_api(Assignment& assignment)
 
 		//			for (int t = 0; t <= ending_time - starting_time; t++)
 		//			{
-		//				fprintf(g_pFileLinkMOE, "%s,%s,%s,%d,%.3f,%.3f,%.3f,%.3f,%s\n",
+		//				fprintf(g_pFileLinkMOE, "%s,%s,%s,%d,%.5f,%.5f,%.5f,%.5f,%s\n",
 
 		//					g_link_vector[l].link_id.c_str(),
 		//					g_node_vector[g_link_vector[l].from_node_seq_no].node_id.c_str(),
