@@ -109,10 +109,10 @@ def calibrate_traffic_flow_model(vdf_training_set, vdf_index):
     plt.plot(xvals, density_speed_function(xvals, *popt), '--', c='b', markersize=6)
     plt.scatter(density_data, speed_data, edgecolors='r', color='r', label='outer layer', zorder=30)
     plt.legend()
-    plt.title('Density-speed fundamental diagram, VDF: ' + str(vdf_index[0] + vdf_index[1] * 100))
+    plt.title('Density-speed fundamental diagram, VDF: ' + str('FT_' + str(vdf_index[0]) + '_AT_' + str(vdf_index[1])))
     plt.xlabel('Density')
     plt.ylabel('Speed')
-    plt.savefig('./1_FD_speed_density_' + str(vdf_index[0] + vdf_index[1] * 100) + '.png')
+    plt.savefig('./1_FD_speed_density_' + str('FT_' + str(vdf_index[0]) + '_AT_' + str(vdf_index[1])) + '.png')
     plt.close()
 
     plt.plot(vdf_training_set_after_sorting['hourly_volume_per_lane'], vdf_training_set_after_sorting['speed'], '*',
@@ -121,10 +121,10 @@ def calibrate_traffic_flow_model(vdf_training_set, vdf_index):
              markersize=6)
     plt.scatter(density_data * speed_data, speed_data, edgecolors='r', color='r', label='outer layer', zorder=30)
     plt.legend()
-    plt.title('Volume-speed fundamental diagram,VDF: ' + str(vdf_index[0] + vdf_index[1] * 100))
+    plt.title('Volume-speed fundamental diagram,VDF: ' + str('FT_' + str(vdf_index[0]) + '_AT_' + str(vdf_index[1])))
     plt.xlabel('Volume')
     plt.ylabel('Speed')
-    plt.savefig('./1_FD_speed_volume_' + str(vdf_index[0] + vdf_index[1] * 100) + '.png')
+    plt.savefig('./1_FD_speed_volume_' + str('FT_' + str(vdf_index[0]) + '_AT_' + str(vdf_index[1])) + '.png')
     plt.close()
 
     plt.plot(vdf_training_set_after_sorting['density'], vdf_training_set_after_sorting['hourly_volume_per_lane'], '*',
@@ -132,10 +132,10 @@ def calibrate_traffic_flow_model(vdf_training_set, vdf_index):
     plt.plot(xvals, xvals * density_speed_function(xvals, *popt), '--', c='b', markersize=6)
     plt.scatter(density_data, density_data * speed_data, edgecolors='r', color='r', label='outer layer', zorder=30)
     plt.legend()
-    plt.title('Density-volume fundamental diagram,VDF: ' + str(vdf_index[0] + vdf_index[1] * 100))
+    plt.title('Density-volume fundamental diagram,VDF: ' + str('FT_' + str(vdf_index[0]) + '_AT_' + str(vdf_index[1])))
     plt.xlabel('Density')
     plt.ylabel('Volume')
-    plt.savefig('./1_FD_volume_density_' + str(vdf_index[0] + vdf_index[1] * 100) + '.png')
+    plt.savefig('./1_FD_volume_density_' + str('FT_' + str(vdf_index[0]) + '_AT_' + str(vdf_index[1])) + '.png')
     plt.close()
 
     return speed_at_capacity, ultimate_capacity, critical_density, free_flow_speed, mm
@@ -243,12 +243,14 @@ def vdf_calculation(internal_period_vdf_daily_link_df, vdf_index, period_index, 
     plt.plot(volume_speed_func(xvals, *popt, *popt_fundamental_diagram) / ultimate_capacity, bpr_func(xvals, *popt),
              c='b')
     plt.plot(xvals, bpr_func(xvals, *popt), '--', c='r', markersize=6)
-    plt.title(DOC_RATIO_METHOD + ' ' + str(vdf_index[0] + vdf_index[1] * 100) + ' ' + str(period_index) + ',RSE=' + str(
+    plt.title(DOC_RATIO_METHOD + ' ' + str('FT_' + str(vdf_index[0]) + '_AT_' + str(vdf_index[1])) + ' ' + str(
+        period_index) + ',RSE=' + str(
         round(RSE, 2)) + '%,ffs=' + str(round(popt[0], 2)) + ',alpha=' + str(round(popt[1], 2)) + ',beta=' + str(
         round(popt[2], 2)))
     plt.xlabel('Hourly_demand_over_capacity')
     plt.ylabel('Speed')
-    plt.savefig('./3_hourly_VDF_' + DOC_RATIO_METHOD + '_' + str(vdf_index[0] + vdf_index[1] * 100) + '_' + str(
+    plt.savefig('./3_hourly_VDF_' + DOC_RATIO_METHOD + '_' + str(
+        'FT_' + str(vdf_index[0]) + '_AT_' + str(vdf_index[1])) + '_' + str(
         period_index) + '.png')
     plt.close()
 
@@ -262,12 +264,14 @@ def vdf_calculation(internal_period_vdf_daily_link_df, vdf_index, period_index, 
     plt.plot(np.linspace(0, 20000, 100), bpr_func(xvals, *popt), '--', c='r', markersize=6)
     plt.plot(internal_period_vdf_daily_link_df['period_volume'].mean(),
              internal_period_vdf_daily_link_df['period_mean_daily_speed'].mean(), 'o', c='r', markersize=8)
-    plt.title(DOC_RATIO_METHOD + ' ' + str(vdf_index[0] + vdf_index[1] * 100) + ' ' + str(period_index) + ',RSE=' + str(
+    plt.title(DOC_RATIO_METHOD + ' ' + str('FT_' + str(vdf_index[0]) + '_AT_' + str(vdf_index[1])) + ' ' + str(
+        period_index) + ',RSE=' + str(
         round(RSE, 2)) + '%,ffs=' + str(round(popt[0], 2)) + ',alpha=' + str(round(popt[1], 2)) + ',beta=' + str(
         round(popt[2], 2)))
     plt.xlabel('Assigned_volume')
     plt.ylabel('Speed')
-    plt.savefig('./3_period_VDF_' + DOC_RATIO_METHOD + '_' + str(vdf_index[0] + vdf_index[1] * 100) + '_' + str(
+    plt.savefig('./3_period_VDF_' + DOC_RATIO_METHOD + '_' + str(
+        'FT_' + str(vdf_index[0]) + '_AT_' + str(vdf_index[1])) + '_' + str(
         period_index) + '.png')
     plt.close()
 
@@ -313,12 +317,14 @@ def vdf_calculation_daily(all_calibration_period_vdf_daily_link_results, vdf_ind
     plt.plot(x_demand_over_capacity, y_speed, '*', c='k', label='original values', markersize=3)
     plt.plot(xvals, bpr_func(xvals, *popt_daily), '--', c='r', markersize=6)
 
-    plt.title('Daily_' + DOC_RATIO_METHOD + ',' + str(vdf_index[0] + vdf_index[1] * 100) + ',RSE=' + str(
-        round(daily_RSE, 2)) + '%,ffs=' + str(round(popt_daily[0], 2)) + ',alpha=' + str(
-        round(popt_daily[1], 2)) + ',beta=' + str(round(popt_daily[2], 2)))
+    plt.title(
+        'Daily_' + DOC_RATIO_METHOD + ',' + str('FT_' + str(vdf_index[0]) + '_AT_' + str(vdf_index[1])) + ',RSE=' + str(
+            round(daily_RSE, 2)) + '%,ffs=' + str(round(popt_daily[0], 2)) + ',alpha=' + str(
+            round(popt_daily[1], 2)) + ',beta=' + str(round(popt_daily[2], 2)))
     plt.xlabel('hourly_demand_over_capacity')
     plt.ylabel('speed')
-    plt.savefig('./4_hourly_VDF_' + DOC_RATIO_METHOD + '_' + str(vdf_index[0] + vdf_index[1] * 100) + '_day.png')
+    plt.savefig('./4_hourly_VDF_' + DOC_RATIO_METHOD + '_' + str(
+        'FT_' + str(vdf_index[0]) + '_AT_' + str(vdf_index[1])) + '_day.png')
     plt.close()
 
     plt.plot(all_calibration_period_vdf_daily_link_results.period_volume,
@@ -336,12 +342,14 @@ def vdf_calculation_daily(all_calibration_period_vdf_daily_link_results, vdf_ind
         plt.plot(df['period_mean_volume'], df['period_mean_speed'], 'o', label=kk, markersize=8)
 
     plt.legend()
-    plt.title('Daily_' + DOC_RATIO_METHOD + ' ' + str(vdf_index[0] + vdf_index[1] * 100) + ',RSE=' + str(
-        round(daily_RSE, 2)) + '%,ffs=' + str(round(popt_daily[0], 2)) + ',alpha=' + str(
-        round(popt_daily[1], 2)) + ',beta=' + str(round(popt_daily[2], 2)))
+    plt.title(
+        'Daily_' + DOC_RATIO_METHOD + ' ' + str('FT_' + str(vdf_index[0]) + '_AT_' + str(vdf_index[1])) + ',RSE=' + str(
+            round(daily_RSE, 2)) + '%,ffs=' + str(round(popt_daily[0], 2)) + ',alpha=' + str(
+            round(popt_daily[1], 2)) + ',beta=' + str(round(popt_daily[2], 2)))
     plt.xlabel('Assigned_volume')
     plt.ylabel('Speed')
-    plt.savefig('./4_period_VDF_' + DOC_RATIO_METHOD + '_' + str(vdf_index[0] + vdf_index[1] * 100) + '_day.png')
+    plt.savefig('./4_period_VDF_' + DOC_RATIO_METHOD + '_' + str(
+        'FT_' + str(vdf_index[0]) + '_AT_' + str(vdf_index[1])) + '_day.png')
     plt.close()
 
     all_calibration_period_vdf_daily_link_results['daily_alpha'] = round(popt_daily[1], 2)
@@ -414,7 +422,7 @@ def calculate_congestion_duration(speed_series, volume_per_lane_series, hourly_v
                     time_stamp - t3_ph) * (time_stamp - t0_ph)
             linreg = LinearRegression(fit_intercept=False)  # do not calculate the intercept for this model
             derived_waiting_time_term = waiting_time_term.reshape(waiting_time_term.shape[0], 1)
-            linreg.fit(derived_waiting_time_term, congestion_period_delay_series)
+            linreg.fit(derived_waiting_time_term, congestion_period_delay_series) # , in X Y
             gamma = linreg.coef_[0]
             queue_series = waiting_time_term * average_discharge_rate * gamma
             max_queue_length = np.max(queue_series)
@@ -495,7 +503,7 @@ if __name__ == "__main__":
 
         vdf_training_set.reset_index(drop=True, inplace=True)  # reset index of the sub dataframe
         print('Step 2: Calibrate key coefficients in traffic stream models in VDF type ' + str(
-            vdf_index[1] * 100 + vdf_index[0]) + ' ...')
+            'FT_' + str(vdf_index[0]) + '_AT_' + str(vdf_index[1])) + ' ...')
         # For each VDF type, we have a unique index for each VDF type e.g. (1) VDF type FT = 1 and AT = 1:  AT*100+FT=100*1+1=101 (2) VDF type FT = 3 and AT = 2:  AT*200+FT=100*2+3=203
         speed_at_capacity, ultimate_capacity, critical_density, free_flow_speed, mm = calibrate_traffic_flow_model(
             vdf_training_set, vdf_index)  # calibrate parameters of traffic flow model
@@ -583,8 +591,8 @@ if __name__ == "__main__":
                 daily_link_list.append(daily_link)
 
             if len(daily_link_list) == 0:
-                print('WARNING: all the links of ' + str(vdf_index[0] + vdf_index[
-                    1] * 100) + ' during assignment period ' + period_index + ' are not qualified...')
+                print('WARNING: all the links of ' + str('FT_' + str(vdf_index[0]) + '_AT_' + str(
+                    vdf_index[1])) + ' during assignment period ' + period_index + ' are not qualified...')
                 continue
 
             internal_period_vdf_daily_link_df = pd.DataFrame(daily_link_list)
@@ -596,7 +604,8 @@ if __name__ == "__main__":
                                 14: 'average_discharge_rate', 15: 'peak_hour_factor', 16: 'congestion_duration',
                                 17: 'congestion_period_mean_speed', 18: 'gamma', 19: 'max_queue_length'}, inplace=True)
             internal_period_vdf_daily_link_df.to_csv(
-                './2_training_set_' + str(100 * vdf_index[1] + vdf_index[0]) + '_' + str(period_index) + '.csv',
+                './2_training_set_' + str('FT_' + str(vdf_index[0]) + '_AT_' + str(vdf_index[1])) + '_' + str(
+                    period_index) + '.csv',
                 index=False)
 
             # Step 3.3 calculate the peak hour factor for each period and VDF type 
@@ -634,7 +643,8 @@ if __name__ == "__main__":
 
             all_calibration_period_vdf_daily_link_results = pd.concat(
                 [all_calibration_period_vdf_daily_link_results, calibration_period_vdf_daily_link_results], sort=False)
-            para = [vdf_index, 100 * vdf_index[1] + vdf_index[0], vdf_index[0], vdf_index[1], period_index,
+            para = [vdf_index, 'FT_' + str(vdf_index[0]) + '_AT_' + str(vdf_index[1]), vdf_index[0], vdf_index[1],
+                    period_index,
                     speed_at_capacity, ultimate_capacity, critical_density, free_flow_speed, mm,
                     period_peak_hour_factor, calibration_period_vdf_daily_link_results.alpha.mean(),
                     calibration_period_vdf_daily_link_results.beta.mean(), np.mean(all_link_gamma)]
@@ -671,14 +681,15 @@ if __name__ == "__main__":
             ['start_time', 'end_time', 'timedelta_t0', 'timedelta_t3'], axis=1)
 
         all_calibration_period_vdf_daily_link_results[
-            'VDF_TYPE'] = 100 * all_calibration_period_vdf_daily_link_results.AT + all_calibration_period_vdf_daily_link_results.FT
+            'VDF_TYPE'] = 'FT_' + (all_calibration_period_vdf_daily_link_results.FT).astype(str) + '_AT_' + (
+            all_calibration_period_vdf_daily_link_results.AT).astype(str)
         all_calibration_period_vdf_daily_link_results = vdf_calculation_daily(
             all_calibration_period_vdf_daily_link_results, vdf_index, speed_at_capacity, ultimate_capacity,
             critical_density, free_flow_speed)
         output_df_daily = pd.concat([output_df_daily, all_calibration_period_vdf_daily_link_results], sort=False)
 
-        para = [100 * vdf_index[1] + vdf_index[0], vdf_index[0], vdf_index[1], 'daily', '--', '--', '--', '--', '--',
-                '--', '--', all_calibration_period_vdf_daily_link_results.daily_alpha.mean(),
+        para = ['FT_' + str(vdf_index[0]) + '_AT_' + str(vdf_index[1]), vdf_index[0], vdf_index[1], 'daily', '--', '--',
+                '--', '--', '--', '--', '--', all_calibration_period_vdf_daily_link_results.daily_alpha.mean(),
                 all_calibration_period_vdf_daily_link_results.daily_beta.mean(), '--']
         g_parameter_list.append(para)
 
