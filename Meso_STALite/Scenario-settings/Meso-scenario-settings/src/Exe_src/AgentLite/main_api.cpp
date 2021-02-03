@@ -46,7 +46,7 @@ template <typename T>
 #define _MAX_TIMEPERIODS 4 // time period set to 4: mid night, morning peak, mid-day and afternoon peak
 #define _MAX_MEMORY_BLOCKS 20
 
-#define _MAX_LINK_SIZE_IN_A_PATH 1000
+#define _MAX_LINK_SIZE_IN_A_PATH 10000
 #define _MAX_LINK_SIZE_FOR_A_NODE 200
 
 #define _MAX_TIMESLOT_PerPeriod 100 // max 96 15-min slots per day
@@ -5036,7 +5036,7 @@ void g_output_simulation_result(Assignment& assignment)
 
 
 	// output link_performance.csv file
-	 log_out << "writing link_performance.csv.." << endl;
+	 //log_out << "writing link_performance.csv.." << endl;
 
 	 int b_debug_detail_flag = 0;
 	 FILE* g_pFileLinkMOE = NULL;
