@@ -1237,7 +1237,7 @@ public:
 		VOC = 0;
 		gamma = 3.47f;
 		mu = 1000;
-		PHF = 3;
+		PHF = 1;  // peak hour factr is defaulted at 1, unless we use external input. 
 
 		alpha = 0.15f;
 		beta = 4;
@@ -1252,6 +1252,10 @@ public:
 
 		t0 = -1;
 		t3 = -1;
+		t2 = -1;
+		Qmax_in_distance = 0;
+		link_length_d = 0;
+		congested_density = 100; //100 vehicles per mile per lane, assuming link distance is mile or km 
 	}
 
 
@@ -1304,11 +1308,36 @@ public:
 			return 0;
 
 	}
-	int t0, t3;
+
+	int t0, t2, t3;
+	float Qmax_in_distance;  // unit: link distance (mile or km)
+	float link_length_d;  // unit: link distance 
+	float congested_density;  // external input from link.csv 
 
 	void Setup()
 	{
+		int L = ending_time_slot_no - starting_time_slot_no;  // in 15 min slot
 
+		if (L >= _MAX_TIMESLOT_PerPeriod - 1)
+			return;
+
+
+		for (int t_abs = starting_time_slot_no; t_abs <= ending_time_slot_no; t_abs++)
+		{
+			Queue[t_abs] = 0;  // t starting from starting_time_slot_no if we map back to the 24 hour horizon 
+			waiting_time[t_abs] = 0;
+			arrival_rate[t_abs] = 0;
+			discharge_rate[t_abs] = 0;
+			travel_time[t_abs] = 0;
+
+		}
+
+		float mid_time_slot_no = starting_time_slot_no + L / 2.0;  // t1;  // we can discuss thi
+
+		t2 = mid_time_slot_no;
+		t0 = mid_time_slot_no;
+		t3 = mid_time_slot_no;
+		Qmax_in_distance = 0;
 	}
 
 	float  PerformSignalVDF(float hourly_per_lane_volume, float red, float cycle_length)
@@ -1324,17 +1353,18 @@ public:
 
 	float  PerformBPR(float volume)
 	{
+		float peak_hour_demand = volume / PHF; 
+		peak_hour_demand = max(0, peak_hour_demand);  // take nonnegative values
 
-		volume = max(0, volume);  // take nonnegative values
+		VOC = peak_hour_demand / max(0.00001f, capacity);
+		avg_travel_time = FFTT + FFTT * alpha * pow(peak_hour_demand / max(0.00001f, capacity), beta);
 
-		if (volume > 1.0)
+		if (avg_travel_time > 1.0 && peak_hour_demand > 1000 && capacity < 6000)
 		{
 			int debug = 1;
 		}
-		VOC = volume / max(0.00001f, capacity);
-		avg_travel_time = FFTT + FFTT * alpha * pow(volume / max(0.00001f, capacity), beta);
 
-		marginal_base = FFTT * alpha * beta*pow(volume / max(0.00001f, capacity), beta - 1);
+		marginal_base = FFTT * alpha * beta*pow(peak_hour_demand / max(0.00001f, capacity), beta - 1);
 
 
 	return avg_travel_time;
@@ -1346,7 +1376,10 @@ public:
 	
 	float PerformBPR_X(float volume, int number_of_lanes, float average_travel_time_in_min)
 	{
+		
 		bValidQueueData = false;
+		if (volume < 0.0001)
+			return 0;
 
 		float FFTT_in_hour = FFTT / 60.0;
 		congestion_period_P = 0;
@@ -1362,7 +1395,7 @@ public:
 			Queue[t] = 0;
 			waiting_time[t] = 0;
 			arrival_rate[t] = 0;
-			discharge_rate[t]= mu/2.0;
+			discharge_rate[t]= 0;
 			travel_time[t] = FFTT_in_hour;
 		}
 		avg_waiting_time = 0;
@@ -1370,8 +1403,13 @@ public:
 
 		//int L = ending_time_slot_no - starting_time_slot_no;  // in 15 min slot
 
+		if (number_of_lanes == 4 && PHF <= 1.2)
+		{
+			int idebug = 1;
+		}
+
 		// Case 1: fully uncongested region
-		if (volume <= L * mu / 2 || L == 0)
+		if (volume <= L/4.0 * mu* number_of_lanes / 2 || L == 0)
 		{
 			// still keep 0 waiting time for all time period
 			congestion_period_P = 0;
@@ -1391,7 +1429,26 @@ public:
 			t3 = min(ending_time_slot_no, t3);
 			// derive t0 and t3 based on congestion duration p
 			int t2 = m * (t3 - t0) + t0;
+
+			float D_over_mu = congestion_period_P;
+			float uncongested_travel_time_in_hour = FFTT_in_hour;
+			float w = max(0.00001, average_travel_time_in_min / 60.0f - uncongested_travel_time_in_hour); //unit: hour, waiting time should not be negative
+
+
+
+			// we add a waiting time bound here
+			if (w > L * MIN_PER_TIMESLOT / 60.0f)
+				w = L * MIN_PER_TIMESLOT / 60.0f;
+
 			
+			gamma = w * 80 * mu / pow(D_over_mu, 4);
+			float t2_t0_in_hour = (t2 - t0) * MIN_PER_TIMESLOT / 60.0f; 
+
+			float v_mu_over_v_f = 0.5; // asssumed value: 70 mph for vf, vmu as 35 mph as average discharge speed
+			float Qmax_in_vehicle = 1.0f/12.0f * gamma * pow(max(0, t2_t0_in_hour), 4) * 1 / (1 - v_mu_over_v_f);  // now Qmax is physical queue length (in vehicles)
+			
+			Qmax_in_distance = Qmax_in_vehicle / congested_density;  //the unit is consistent to the unit in length in link.csv ( mile or km)
+
 			for (int tt_relative = 0; tt_relative <= L; tt_relative++)  //tt_relative is relative time
 			{
 				int time_abs = starting_time_slot_no + tt_relative;  //absolute time index
@@ -1404,10 +1461,10 @@ public:
 					waiting_time[time_abs] = 0;  // per hour
 					arrival_rate[time_abs] = mu / 2;
 					int t0_t3 = t3 - t0;
-					int volume_per_hour = max(0.1, (volume - t0_t3/4.0 * mu * number_of_lanes) / (L - t0_t3)); // the unit is volume per hour 
-					volume_per_hour = min(volume_per_hour, mu);
-					discharge_rate[time_abs] = volume_per_hour; // volume per hour per lane
-					travel_time[time_abs] = average_travel_time_in_min/60.0;  // per hour
+					int volume_per_slot_per_lane = max(0.1, (volume - t0_t3/4.0 * mu * number_of_lanes) / ((L - t0_t3))/ number_of_lanes); // the unit is volume per hour 
+					volume_per_slot_per_lane = min(volume_per_slot_per_lane, mu/4.0);
+					discharge_rate[time_abs] = volume_per_slot_per_lane; // volume per hour per lane
+					travel_time[time_abs] = FFTT_in_hour;  // per hour
 
 				}
 				if (time_abs >= t0 && time_abs <= t3)
@@ -1416,9 +1473,9 @@ public:
 					if (t0_t3 <= MIN_CONGESTED_TIMESLOT) {
 						waiting_time[time_abs] = 0;  // per hour
 						arrival_rate[time_abs] = mu / 2;
-						int volume_per_hour = volume / L; // the unit is volume per hour 
-						volume_per_hour = min(volume_per_hour, mu); // volume per hour per lane
-						discharge_rate[time_abs] = volume_per_hour; // volume per hour per lane
+						int volume_per_slot_per_lane = volume / L; // the unit is volume per hour 
+						discharge_rate[time_abs] = volume_per_slot_per_lane; // the unit is volume per hour 
+						
 						travel_time[time_abs] = average_travel_time_in_min /60.0;  // per hour
 					}
 					else {
@@ -1435,25 +1492,13 @@ public:
 						//avg_travel_time has been calculated based on standard BPR function, thus, the condition is that, PerformBPR() should be called before PerformBPR_X
 
 						// int avg_travel_time = PerformBPR(volume)/60.0; // convert travel time to hour
-						float uncongested_travel_time_in_hour = FFTT_in_hour;
-						float w = max(0.00001, average_travel_time_in_min /60.0 - uncongested_travel_time_in_hour); //unit: hour, waiting time should not be negative
-						// mu is read from the external link.csv file
-						float D_over_mu = congestion_period_P;
-						gamma = w * 80 * mu / pow(D_over_mu, 4);
-
 
 						//second congested phase
 						Queue[time_abs] = 1 / (4.0) * gamma * (t_ph - t0_ph) * (t_ph - t0_ph) * (t_ph - t3_ph) * (t_ph - t3_ph);
 						waiting_time[time_abs] = 1 / (4.0 * mu) * gamma * (t_ph - t0_ph) * (t_ph - t0_ph) * (t_ph - t3_ph) * (t_ph - t3_ph);  // unit is hour
 						arrival_rate[time_abs] = gamma * (t_ph - t0_ph) * (t_ph - t2_ph) * (t_ph - t3_ph) + mu;
-						discharge_rate[time_abs] = mu;
+						discharge_rate[time_abs] = mu / 4.0;
 						travel_time[time_abs] = FFTT_in_hour + waiting_time[time_abs]; // per hour
-						// special case: when t equals to t0 or t3, in this case, queue = 0 and waiting_time = 0
-						// which will cause the speed equals to the freeflow speed, making the speed curve unreal
-						// here we assume in the start and end time of the congestion period the travel time equals to the average travel time of this period: tau
-						if (waiting_time[time_abs] == 0) {
-							travel_time[time_abs] = average_travel_time_in_min /60.0; //in hour
-						}
 
 						bValidQueueData = true;
 					}
@@ -1464,10 +1509,10 @@ public:
 					//third uncongested phase with mu/2 as the approximate flow rates
 					waiting_time[time_abs] = 0;
 					int t0_t3 = t3 - t0;
-					int volume_per_hour = max(0.1, (volume - t0_t3 / 4.0 * mu * number_of_lanes) / (L - t0_t3)); // the unit is volume per hour 
-					volume_per_hour = min(volume_per_hour, mu);
-					discharge_rate[time_abs] = volume_per_hour; // volume per hour per lane
-					travel_time[time_abs] = average_travel_time_in_min / 60.0;
+					int volume_per_slot_per_lane = max(0.1, (volume - t0_t3 / 4.0 * mu * number_of_lanes) / ((L - t0_t3)) / number_of_lanes); // the unit is volume per hour 
+					volume_per_slot_per_lane = min(volume_per_slot_per_lane, mu / 4.0);
+					discharge_rate[time_abs] = volume_per_slot_per_lane; // volume per slot per lane
+					travel_time[time_abs] = FFTT_in_hour;
 				}
 	//			avg_waiting_time = gamma / (120 * mu)*pow(P, 4.0) *60.0;// avg_waiting_time  should be per min 
 				//log_out << avg_waiting_time << endl;
@@ -1478,6 +1523,42 @@ public:
 		return avg_travel_time;
 
 	}
+
+	float PerformBPR_X_queue_propagation(int updated_Qmax_in_vehicle)
+	{
+		int L = ending_time_slot_no - starting_time_slot_no;  // in 15 min slot
+
+		if (L >= _MAX_TIMESLOT_PerPeriod - 1)
+			return 0;
+
+		float FFTT_in_hour = FFTT / 60.0;
+
+			for (int tt_relative = 0; tt_relative <= L; tt_relative++)  //tt_relative is relative time
+			{
+				int time_abs = starting_time_slot_no + tt_relative;  //absolute time index
+
+				if (time_abs >= t0 && time_abs <= t3) // with updated values of t0 and t3
+				{
+					int t0_t3 = t3 - t0;  // with updated congestion  horizon
+					if (t0_t3 > MIN_CONGESTED_TIMESLOT)
+					{
+						if (time_abs < t2) // beteween t0 and t2
+						{
+							Queue[time_abs] = updated_Qmax_in_vehicle *(t2- time_abs)/ (t0_t3/2);
+						}
+						else // between t2 and t3
+						{
+							Queue[time_abs] = updated_Qmax_in_vehicle * (time_abs - t2) / (t0_t3/2);
+						}
+						waiting_time[time_abs] = Queue[time_abs] / mu; // per hour
+						discharge_rate[time_abs] = mu/4.0;
+						travel_time[time_abs] = FFTT_in_hour + waiting_time[time_abs]; // per hour
+					}
+				}
+
+			}
+	}
+
 };
 
 
@@ -3751,7 +3832,8 @@ void g_ReadInputData(Assignment& assignment)
 				link.VDF_period[tau].beta = 4;
 				link.VDF_period[tau].starting_time_slot_no = assignment.g_DemandPeriodVector[tau].starting_time_slot_no;
 				link.VDF_period[tau].ending_time_slot_no = assignment.g_DemandPeriodVector[tau].ending_time_slot_no;
-
+				link.VDF_period[tau].link_length_d = length;
+				link.VDF_period[tau].Setup();
 
 				int demand_period_id = assignment.g_DemandPeriodVector[tau].demand_period_id;
 				sprintf_s (VDF_field_name, "VDF_fftt%d", demand_period_id);
@@ -4747,10 +4829,104 @@ void g_column_pool_optimization(Assignment& assignment, int column_updating_iter
 	}
 }
 
+
+
+void g_apply_upstream_link_queue_spillback()
+{
+	// copy from agent.csv with columns
+	int agent_type_size = assignment.g_AgentTypeVector.size();
+	int zone_size = g_zone_vector.size();
+	int o, at, d, tau;
+
+	int demand_period_size = assignment.g_DemandPeriodVector.size();
+
+	std::map<int, CColumnPath>::iterator it, it_begin, it_end;
+
+	CColumnVector* p_column;
+	for (o = 0; o < zone_size; o++)
+	{
+		for (at = 0; at < agent_type_size; at++)
+			for (d = 0; d < zone_size; d++)
+				for (tau = 0; tau < demand_period_size; tau++)
+				{
+					p_column = &(assignment.g_column_pool[o][d][at][tau]);
+					if (p_column->od_volume > 0)
+					{
+
+						// scan through the map with different node sum for different continuous paths
+						it_begin = p_column->path_node_sequence_map.begin();
+						it_end = p_column->path_node_sequence_map.end();
+
+						for (it = it_begin; it != it_end; it++)  // for each colume
+						{
+							if (it->second.m_link_size >= 2) // at least 2 links along the path 
+							{
+								for (int nl = it->second.m_link_size - 1; nl >= 1; nl--)  // backward scanning
+								{
+									int downstream_link_seq_no = it->second.path_link_vector[nl];
+									int upstream_link_seq_no = it->second.path_link_vector[nl - 1];
+
+									if (g_link_vector[downstream_link_seq_no].link_type == (-1) || g_link_vector[upstream_link_seq_no].link_type == (-1))
+										continue; // skip virtual connectors
+
+									if (g_link_vector[downstream_link_seq_no].VDF_period[tau].Qmax_in_distance > g_link_vector[downstream_link_seq_no].VDF_period[tau].link_length_d)
+									{
+
+										// first apply queue spillback to the upstream link 
+										//notes for formula
+										//Qmax = max(Qmax, input_Qmax - input_d);
+										//float queue_duration_reduction_ratio = (input_Qmax - input_d) / input_Qmax;
+										//t0 = min(t0, t2 - (input_t2 - input_t0) * queue_duration_reduction_ratio);
+										//t3 = max(t3, t2 + (input_t3 - input_t2) * queue_duration_reduction_ratio);
+
+
+										float Qmax_downstream = g_link_vector[downstream_link_seq_no].VDF_period[tau].Qmax_in_distance;
+										float Qmax_spillback = g_link_vector[downstream_link_seq_no].VDF_period[tau].Qmax_in_distance - g_link_vector[downstream_link_seq_no].VDF_period[tau].link_length_d;
+										float queue_duration_reduction_ratio = Qmax_spillback / max(0.001, Qmax_downstream);
+										int queue_spillback_t0 = g_link_vector[downstream_link_seq_no].VDF_period[tau].t2 -
+											(g_link_vector[downstream_link_seq_no].VDF_period[tau].t2 - g_link_vector[downstream_link_seq_no].VDF_period[tau].t0) * queue_duration_reduction_ratio;
+
+										int queue_spillback_t3 = g_link_vector[downstream_link_seq_no].VDF_period[tau].t2 +
+											(g_link_vector[downstream_link_seq_no].VDF_period[tau].t3 - g_link_vector[downstream_link_seq_no].VDF_period[tau].t2) * queue_duration_reduction_ratio;
+
+										if (g_link_vector[upstream_link_seq_no].VDF_period[tau].Qmax_in_distance < Qmax_spillback)
+										{ 
+											g_link_vector[upstream_link_seq_no].VDF_period[tau].Qmax_in_distance = Qmax_spillback;  // update with higher values
+											
+											if (g_link_vector[upstream_link_seq_no].VDF_period[tau].t0 == (-1) || queue_spillback_t0 < g_link_vector[upstream_link_seq_no].VDF_period[tau].t0)
+											{
+												g_link_vector[upstream_link_seq_no].VDF_period[tau].t0 = queue_spillback_t0;
+												g_link_vector[upstream_link_seq_no].VDF_period[tau].t2 = g_link_vector[downstream_link_seq_no].VDF_period[tau].t2;
+											}
+											
+											if (g_link_vector[upstream_link_seq_no].VDF_period[tau].t3 == (-1) || queue_spillback_t3 > g_link_vector[upstream_link_seq_no].VDF_period[tau].t3)
+												g_link_vector[upstream_link_seq_no].VDF_period[tau].t3 = queue_spillback_t3;
+
+											float queue_max_in_vehicle = g_link_vector[upstream_link_seq_no].VDF_period[tau].Qmax_in_distance * g_link_vector[upstream_link_seq_no].VDF_period[tau].congested_density;
+											g_link_vector[upstream_link_seq_no].VDF_period[tau].PerformBPR_X_queue_propagation(queue_max_in_vehicle);
+										}
+										
+										// second reduce the queue max in the self-link downstream, so that we do not need to take into accoun this link's qeueue again
+										g_link_vector[downstream_link_seq_no].VDF_period[tau].Qmax_in_distance = g_link_vector[downstream_link_seq_no].VDF_period[tau].link_length_d;
+									}
+								}
+							}
+						}
+					}
+				}
+	}
+
+
+}
+
+
 char str_buffer[STRING_LENGTH_PER_LINE];
 
 void g_output_simulation_result(Assignment& assignment)
 {
+
+	g_apply_upstream_link_queue_spillback(); // preprocessing before outputting link performance data
+
 	// output agent.csv files
 	if (assignment.assignment_mode == 0)
 	{
@@ -5107,28 +5283,32 @@ void g_output_simulation_result(Assignment& assignment)
 					 {
 						 int time = tt * MIN_PER_TIMESLOT;  // 15 min per interval
 
-						 float speed = g_link_vector[l].length / (max(0.00001, g_link_vector[l].VDF_period[tau].travel_time[tt]));
+						 float speed = g_link_vector[l].length / (max(g_link_vector[l].VDF_period[tau].FFTT/60.0, g_link_vector[l].VDF_period[tau].travel_time[tt]));
 
+						 if (speed >= 1000)
+						 {
+							 int i_debug = 1;
+						 }
 
 						 float V_mu_over_V_f_ratio = 0.5; // to be calibrated. 
 						 float physical_queue = g_link_vector[l].VDF_period[tau].Queue[tt] / (1 - V_mu_over_V_f_ratio);  // per lane
-						 float density = g_link_vector[l].VDF_period[tau].discharge_rate[tt] / max(0.001, speed);
-						 float volume = g_link_vector[l].VDF_period[tau].discharge_rate[tt] * g_link_vector[l].number_of_lanes / (60 / MIN_PER_TIMESLOT);
+						 float density = g_link_vector[l].VDF_period[tau].discharge_rate[tt]*4.0 / max(0.001, speed);
+						 float volume = g_link_vector[l].VDF_period[tau].discharge_rate[tt] * g_link_vector[l].number_of_lanes ;
 						 float travel_time = g_link_vector[l].VDF_period[tau].travel_time[tt] * 60;
 
 						 //if (g_link_vector[l].flow_volume_per_period[tau] != 0) {
 						 //	int vol = 1;
 						 //}
 
-						 if (t0 == -1 || t3 == -1 || tt < t0 || tt > t3) {
-							 // when tt is not in congestion period t0-t3, the density = hourly volume/speed based on fundmental disgram k=q/v
-							 volume = g_link_vector[l].flow_volume_per_slot[tt]; // volume per time slot
-							 density = (volume * 60.0 / MIN_PER_TIMESLOT) / speed;
-							 
-							 // when not congested use average speed
-							 speed = g_link_vector[l].length / (max(0.00001, g_link_vector[l].VDF_period[tau].avg_travel_time)) * 60;
-							 travel_time = g_link_vector[l].VDF_period[tau].avg_travel_time;
-						 }
+						 //if (t0 == -1 || t3 == -1 || tt < t0 || tt > t3) {
+							// // when tt is not in congestion period t0-t3, the density = hourly volume/speed based on fundmental disgram k=q/v
+							// volume = g_link_vector[l].flow_volume_per_slot[tt]; // volume per time slot
+							// density = (volume * 60.0 / MIN_PER_TIMESLOT) / speed;
+							// 
+							// // when not congested use average speed
+							// speed = g_link_vector[l].length / (max(0.00001, g_link_vector[l].VDF_period[tau].avg_travel_time)) * 60;
+							// travel_time = g_link_vector[l].VDF_period[tau].avg_travel_time;
+						 //}
 
 						 if (density > 150)  // 150 as kjam.
 							 density = 150;
