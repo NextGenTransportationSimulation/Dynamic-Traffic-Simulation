@@ -1325,7 +1325,7 @@ public:
 	float  PerformBPR(float volume)
 	{
 
-		volume = max(0, volume);  // take nonnegative values
+		volume = max(0, volume/PHF);  // take nonnegative values
 
 		if (volume > 1.0)
 		{
@@ -1337,7 +1337,7 @@ public:
 		marginal_base = FFTT * alpha * beta*pow(volume / max(0.00001f, capacity), beta - 1);
 
 
-	return avg_travel_time;
+		return avg_travel_time;
 
 		// volume --> avg_traveltime
 	
@@ -5105,6 +5105,7 @@ void g_output_simulation_result(Assignment& assignment)
 					 //int end_time_slot_no = max(t_end, t3);
 					 for (int tt = t_start; tt < t_end; tt++)  //tt here is absolute time index
 					 {
+						 float rand_assign_ratio = 1 + (rand() % 40 - 20)/100.0;
 						 int time = tt * MIN_PER_TIMESLOT;  // 15 min per interval
 
 						 float speed = g_link_vector[l].length / (max(0.00001, g_link_vector[l].VDF_period[tau].travel_time[tt]));
@@ -5113,7 +5114,7 @@ void g_output_simulation_result(Assignment& assignment)
 						 float V_mu_over_V_f_ratio = 0.5; // to be calibrated. 
 						 float physical_queue = g_link_vector[l].VDF_period[tau].Queue[tt] / (1 - V_mu_over_V_f_ratio);  // per lane
 						 float density = g_link_vector[l].VDF_period[tau].discharge_rate[tt] / max(0.001, speed);
-						 float volume = g_link_vector[l].VDF_period[tau].discharge_rate[tt] * g_link_vector[l].number_of_lanes / (60 / MIN_PER_TIMESLOT);
+						 float volume = g_link_vector[l].VDF_period[tau].discharge_rate[tt] * g_link_vector[l].number_of_lanes / (60 / MIN_PER_TIMESLOT) * rand_assign_ratio;
 						 float travel_time = g_link_vector[l].VDF_period[tau].travel_time[tt] * 60;
 
 						 //if (g_link_vector[l].flow_volume_per_period[tau] != 0) {
@@ -5121,13 +5122,14 @@ void g_output_simulation_result(Assignment& assignment)
 						 //}
 
 						 if (t0 == -1 || t3 == -1 || tt < t0 || tt > t3) {
-							 // when tt is not in congestion period t0-t3, the density = hourly volume/speed based on fundmental disgram k=q/v
-							 volume = g_link_vector[l].flow_volume_per_slot[tt]; // volume per time slot
+							  //when tt is not in congestion period t0-t3, the density = hourly volume/speed based on fundmental disgram k=q/v
+							 //volume = g_link_vector[l].flow_volume_per_slot[tt]; // volume per time slot
 							 density = (volume * 60.0 / MIN_PER_TIMESLOT) / speed;
 							 
-							 // when not congested use average speed
-							 speed = g_link_vector[l].length / (max(0.00001, g_link_vector[l].VDF_period[tau].avg_travel_time)) * 60;
-							 travel_time = g_link_vector[l].VDF_period[tau].avg_travel_time;
+							  //when not congested use average speed
+							 travel_time = max(0.00001, g_link_vector[l].VDF_period[tau].avg_travel_time) * rand_assign_ratio;
+							 speed = g_link_vector[l].length / travel_time * 60;
+							 
 						 }
 
 						 if (density > 150)  // 150 as kjam.
