@@ -5113,6 +5113,8 @@ void g_output_simulation_result(Assignment& assignment)
 
 						 float V_mu_over_V_f_ratio = 0.5; // to be calibrated. 
 						 float physical_queue = g_link_vector[l].VDF_period[tau].Queue[tt] / (1 - V_mu_over_V_f_ratio);  // per lane
+						 physical_queue = min(g_link_vector[l].length * 1000, physical_queue); // here the unit is meter
+
 						 float density = g_link_vector[l].VDF_period[tau].discharge_rate[tt] / max(0.001, speed);
 						 float volume = g_link_vector[l].VDF_period[tau].discharge_rate[tt] * g_link_vector[l].number_of_lanes / (60 / MIN_PER_TIMESLOT) * rand_assign_ratio;
 						 float travel_time = g_link_vector[l].VDF_period[tau].travel_time[tt] * 60;
